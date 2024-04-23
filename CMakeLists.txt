@@ -17,5 +17,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 
+find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+
 add_executable(${PROJECT_NAME}
     main.cpp)
+
+target_link_libraries(${PROJECT_NAME}
+    SDL2::SDL2)
