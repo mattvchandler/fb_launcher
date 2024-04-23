@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wall)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -18,9 +16,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+find_package(PNG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     main.cpp)
 
 target_link_libraries(${PROJECT_NAME}
-    SDL2::SDL2)
+    SDL2::SDL2
+    PNG::PNG)
