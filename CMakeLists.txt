@@ -23,7 +23,9 @@ find_package(PNG REQUIRED)
 find_package(Fontconfig REQUIRED)
 
 add_executable(${PROJECT_NAME}
-    main.cpp)
+    main.cpp
+    sdl.cpp
+    font.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     SDL2::Main
