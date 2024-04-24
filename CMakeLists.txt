@@ -15,12 +15,18 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
+
+find_package(SDL2 REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 find_package(PNG REQUIRED)
+find_package(Fontconfig REQUIRED)
 
 add_executable(${PROJECT_NAME}
     main.cpp)
 
 target_link_libraries(${PROJECT_NAME}
-    SDL2::SDL2
-    PNG::PNG)
+    SDL2::Main
+    SDL2::TTF
+    PNG::PNG
+    Fontconfig::Fontconfig)
