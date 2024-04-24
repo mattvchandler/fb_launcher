@@ -1,6 +1,5 @@
 #include <iostream>
 
-
 #include "font.hpp"
 #include "sdl.hpp"
 
@@ -30,7 +29,6 @@ int main(int argc, char * argv[])
     auto font = SDL::Font("sans-serif", 20);
 
     auto text = font.render_text(renderer, "Testing this\nText", SDL_Color{0xFF, 0xFF, 0xFF, 0xFF});
-    auto text_dest = SDL_Rect{0, 0, text.get_width(), text.get_height()};
 
     bool running = true;
     while(running)
@@ -51,7 +49,7 @@ int main(int argc, char * argv[])
 
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, tex, nullptr, nullptr);
-        SDL_RenderCopy(renderer, text, nullptr, &text_dest);
+        text.render(renderer, 0, 0);
         SDL_RenderPresent(renderer);
     }
 
