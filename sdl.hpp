@@ -49,7 +49,7 @@ namespace SDL
     {
         SDL_Renderer * renderer {nullptr};
         explicit Renderer(Window & window):
-            renderer{SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)}
+            renderer{SDL_CreateRenderer(window, -1, 0)}
         {
             if(!renderer)
                 sdl_error("Unable to create SDL renderer");
