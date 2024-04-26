@@ -1,4 +1,6 @@
 #include <iostream>
+#include <list>
+#include <stdexcept>
 
 #include "font.hpp"
 #include "sdl.hpp"
@@ -18,7 +20,7 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    auto sdl_lib = SDL::SDL{SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER};
+    auto sdl_lib = SDL::SDL{SDL_INIT_VIDEO | SDL_INIT_JOYSTICK};
     auto ttf_lib = SDL::TTF{};
 
     auto window = SDL::Window{"fb_launcher"};
@@ -29,77 +31,58 @@ int main(int argc, char * argv[])
 
     auto text = font.render_text(renderer, "Testing this\nText", SDL_Color{0xFF, 0xFF, 0xFF, 0xFF});
 
-    SDL_Joystick * joy = nullptr;
-    SDL_GameController * ctrl = nullptr;
+    auto joysticks = std::list<SDL::Joystick>{};
 
     bool running = true;
     while(running)
     {
         SDL_Event ev;
-        while(SDL_PollEvent(&ev)) // TODO: change to SDL_WaitEvent
+        if(SDL_WaitEvent(&ev) < 0)
+            SDL::sdl_error("Error getting SDL event");
+
+        switch(ev.type)
         {
-            switch(ev.type)
-            {
-                case SDL_QUIT:
-                case SDL_KEYDOWN:
-                    running = false;
-                    break;
-                case SDL_JOYDEVICEADDED:
-                // case SDL_CONTROLLERDEVICEADDED:
-                    std::cout<<"Joydevice added "<<ev.jdevice.which<<"\n";
-                    if(SDL_IsGameController(ev.jdevice.which))
+            case SDL_QUIT:
+            case SDL_KEYDOWN:
+                running = false;
+                break;
+
+            case SDL_JOYDEVICEADDED:
+                joysticks.emplace_back(ev.jdevice.which);
+                std::cout<<"Joydevice created "<<ev.jdevice.which<<" "<<SDL_JoystickName(joysticks.back())<<"\n";
+                break;
+            case SDL_JOYDEVICEREMOVED:
+                std::cout<<"Joydevice removed "<<ev.jdevice.which<<"\n";
+
+                for(auto i = std::begin(joysticks); i != std::end(joysticks);)
+                {
+                    if(SDL_JoystickInstanceID(*i) == ev.jdevice.which)
                     {
-                        std::cout<<"Created as gamecontroller\n";
-                        ctrl = SDL_GameControllerOpen(ev.jdevice.which);
-                        if(!ctrl)
-                            std::cerr<<"bad ctrl: "<<SDL_GetError()<<'\n';
+                        i = joysticks.erase(i);
+                        break;
                     }
                     else
-                    {
-                        std::cout<<"Created as joystick\n";
-                        joy = SDL_JoystickOpen(ev.jdevice.which);
-                        if(!joy)
-                            std::cerr<<"bad joy: "<<SDL_GetError()<<'\n';
-                    }
-                    break;
-                case SDL_JOYDEVICEREMOVED:
-                    std::cout<<"Joydevice removed "<<ev.jdevice.which<<"\n";
-                    if(joy)
-                    {
-                        SDL_JoystickClose(joy);
-                        joy = nullptr;
-                    }
-                    break;
-                case SDL_CONTROLLERDEVICEREMOVED:
-                    std::cout<<"Ctrldevice removed "<<ev.cdevice.which<<"\n";
-                    if(ctrl)
-                    {
-                        SDL_GameControllerClose(ctrl);
-                        ctrl = nullptr;
-                    }
-                    break;
-                case SDL_JOYAXISMOTION:
-                    std::cout<<"Joyaxismotion: "<<ev.jaxis.which<<' '<<(int)ev.jaxis.axis<<' '<<ev.jaxis.value<<'\n';
-                    break;
-                case SDL_JOYBUTTONDOWN:
-                    std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
-                    break;
-                case SDL_JOYHATMOTION:
-                    std::cout<<"Joyhat: "<<ev.jhat.which<<' '<<(int)ev.jhat.hat<<' '<<(int)ev.jhat.value<<'\n';
-                    break;
-                case SDL_CONTROLLERAXISMOTION:
-                    std::cout<<"caxismotion: "<<ev.caxis.which<<' '<<(int)ev.caxis.axis<<' '<<(int)ev.caxis.value<<'\n';
-                    break;
-                case SDL_CONTROLLERBUTTONDOWN:
-                    std::cout<<"Cbutton: "<<(int)ev.cbutton.which<<' '<<(int)ev.cbutton.button<<' '<<(int)ev.cbutton.state<<'\n';
-                    break;
-                case SDL_CONTROLLERDEVICEREMAPPED:
-                    std::cout<<"Cdevice remapped "<<ev.cdevice.which<<"\n";
-                    break;
+                        ++i;
+                }
+                break;
 
-                default:
-                    break;
-            }
+            // TODO: also enter
+            case SDL_JOYBUTTONDOWN: // TODO: all buttons launch the selected app
+                std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
+                break;
+
+            // TODO: next / prev actions
+            // TODO: keyboard arrows
+            // TODO: axis deadzone
+            case SDL_JOYAXISMOTION:
+                std::cout<<"Joyaxismotion: "<<ev.jaxis.which<<' '<<(int)ev.jaxis.axis<<' '<<ev.jaxis.value<<'\n';
+                break;
+            case SDL_JOYHATMOTION:
+                std::cout<<"Joyhat: "<<ev.jhat.which<<' '<<(int)ev.jhat.hat<<' '<<(int)ev.jhat.value<<'\n';
+                break;
+
+            default:
+                break;
         }
 
         std::cout.flush();
@@ -108,12 +91,6 @@ int main(int argc, char * argv[])
         text.render(renderer, 0, 0);
         SDL_RenderPresent(renderer);
     }
-
-    if(joy)
-        SDL_JoystickClose(joy);
-
-    if(ctrl)
-        SDL_GameControllerClose(ctrl);
 
     return 0;
 }

@@ -8,15 +8,13 @@
 
 #include "sdl.hpp"
 
-namespace
+namespace SDL
 {
     [[noreturn]] inline void ttf_error(const std::string & error)
     {
         throw std::runtime_error{error + ": " + TTF_GetError()};
     }
-}
-namespace SDL
-{
+
     struct TTF
     {
         TTF()

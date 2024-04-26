@@ -6,16 +6,13 @@
 
 #include <SDL2/SDL.h>
 
-namespace
+namespace SDL
 {
     [[noreturn]] inline void sdl_error(const std::string & error)
     {
         throw std::runtime_error{error + ": " + SDL_GetError()};
     }
-}
 
-namespace SDL
-{
     struct SDL
     {
         SDL(Uint32 flags)
@@ -112,6 +109,20 @@ namespace SDL
 
         int get_width() const { return width_; }
         int get_height() const { return height_; }
+    };
+
+    struct Joystick
+    {
+        SDL_Joystick * joystick {nullptr};
+        explicit Joystick(int index):
+            joystick{SDL_JoystickOpen(index)}
+        {
+            if(!joystick)
+                sdl_error("Unable to create SDL joystick");
+        }
+        ~Joystick() { SDL_JoystickClose(joystick); }
+        operator const SDL_Joystick*() const { return joystick; }
+        operator SDL_Joystick*() { return joystick; }
     };
 }
 
