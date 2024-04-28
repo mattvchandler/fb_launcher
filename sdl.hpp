@@ -119,9 +119,6 @@ namespace SDL
     class Joystick
     {
     private:
-        static constexpr auto deadzone = 8'000;
-        static constexpr auto threshold = 20'000;
-
         std::variant<SDL_Joystick*, SDL_GameController*> joystick {static_cast<SDL_Joystick*>(nullptr)};
         std::vector<char> centered;
     public:
@@ -146,7 +143,7 @@ namespace SDL
                 if(!j)
                     sdl_error("Unable to create SDL joystick");
 
-                centered.resize(SDL_JoystickNumAxes(j));
+                centered.resize(1);
                 std::fill(std::begin(centered), std::end(centered), 1);
                 joystick = j;
             }
@@ -159,8 +156,14 @@ namespace SDL
 
             if(ev.type == SDL_JOYAXISMOTION && std::holds_alternative<SDL_Joystick* >(joystick))
             {
-                x = ev.jaxis.value;
-                ctr = &centered[ev.jaxis.axis];
+                if(ev.jaxis.axis >= 2)
+                    return Dir::NONE;
+
+                auto & j = std::get<SDL_Joystick*>(joystick);
+
+                x = SDL_JoystickGetAxis(j, 0);
+                y = SDL_JoystickGetAxis(j, 1);
+                ctr = &centered[0];
             }
             else if(ev.type == SDL_CONTROLLERAXISMOTION && std::holds_alternative<SDL_GameController*>(joystick))
             {
@@ -191,6 +194,8 @@ namespace SDL
                 return Dir::NONE;
 
             auto len2 = x*x + y*y;
+            constexpr auto deadzone = 8'000;
+            constexpr auto threshold = 20'000;
             constexpr auto deadzone2 = deadzone*deadzone;
             constexpr auto threshold2 = threshold*threshold;
 

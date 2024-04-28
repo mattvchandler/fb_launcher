@@ -125,6 +125,7 @@ int main(int argc, char * argv[])
                 break;
             }
 
+            // even though we're using the GameController API, this is still called on the D-pad
             case SDL_JOYHATMOTION:
                 std::cout<<"Joyhat: "<<ev.jhat.which<<' '<<(int)ev.jhat.hat<<' '<<(int)ev.jhat.value<<'\n';
                 switch(ev.jhat.value)
