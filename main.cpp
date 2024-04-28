@@ -1,16 +1,29 @@
 #include <iostream>
-#include <list>
-#include <stdexcept>
+#include <map>
 
 #include "font.hpp"
 #include "sdl.hpp"
 
-// TODO: keyboard / joystick input
 // TODO: CEC input?
 // TODO: load / parse config file
 // TODO: unload everything and launch selected program
 // TODO: power-off, reboot options
 // TODO: autolaunch 1st app (Kodi)
+
+void menu_prev()
+{
+    std::cout<<"Prev menu item stub\n";
+}
+
+void menu_next()
+{
+    std::cout<<"Next menu item stub\n";
+}
+
+void menu_select()
+{
+    std::cout<<"Menu select stub\n";
+}
 
 int main(int argc, char * argv[])
 {
@@ -20,18 +33,19 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    auto sdl_lib = SDL::SDL{SDL_INIT_VIDEO | SDL_INIT_JOYSTICK};
+    auto sdl_lib = SDL::SDL{SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER};
     auto ttf_lib = SDL::TTF{};
 
     auto window = SDL::Window{"fb_launcher"};
     auto renderer = SDL::Renderer(window);
+    SDL_ShowCursor(SDL_DISABLE);
 
     auto tex = SDL::Texture(renderer, argv[1]);
     auto font = SDL::Font("sans-serif", 20);
 
     auto text = font.render_text(renderer, "Testing this\nText", SDL_Color{0xFF, 0xFF, 0xFF, 0xFF});
 
-    auto joysticks = std::list<SDL::Joystick>{};
+    auto joysticks = std::map<int, SDL::Joystick>{};
 
     bool running = true;
     while(running)
@@ -43,42 +57,92 @@ int main(int argc, char * argv[])
         switch(ev.type)
         {
             case SDL_QUIT:
-            case SDL_KEYDOWN:
                 running = false;
                 break;
 
             case SDL_JOYDEVICEADDED:
-                joysticks.emplace_back(ev.jdevice.which);
-                std::cout<<"Joydevice created "<<ev.jdevice.which<<" "<<SDL_JoystickName(joysticks.back())<<"\n";
+            {
+                auto joy = SDL::Joystick{ev.jdevice.which};
+                std::cout<<"Joydevice created "<<ev.jdevice.which<<" "<<joy.name()<<"\n";
+                joysticks.emplace(SDL_JoystickGetDeviceInstanceID(ev.jdevice.which), std::move(joy));
                 break;
+            }
+
             case SDL_JOYDEVICEREMOVED:
                 std::cout<<"Joydevice removed "<<ev.jdevice.which<<"\n";
+                joysticks.erase(ev.jdevice.which);
+                break;
 
-                for(auto i = std::begin(joysticks); i != std::end(joysticks);)
+            case SDL_KEYDOWN:
+                switch(ev.key.keysym.sym)
                 {
-                    if(SDL_JoystickInstanceID(*i) == ev.jdevice.which)
-                    {
-                        i = joysticks.erase(i);
+                    case SDLK_RETURN:
+                    case SDLK_KP_ENTER:
+                        menu_select();
                         break;
-                    }
-                    else
-                        ++i;
+
+                    case SDLK_ESCAPE:
+                        running = false;
+                        break;
+
+                    case SDLK_LEFT:
+                    case SDLK_UP:
+                        menu_prev();
+                        break;
+
+                    case SDLK_RIGHT:
+                    case SDLK_DOWN:
+                        menu_next();
+                        break;
+
+                    default:
+                        break;
                 }
                 break;
 
-            // TODO: also enter
-            case SDL_JOYBUTTONDOWN: // TODO: all buttons launch the selected app
+            case SDL_JOYBUTTONDOWN: // all joystick buttons launch the selected app
                 std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
+                menu_select();
                 break;
 
-            // TODO: next / prev actions
-            // TODO: keyboard arrows
-            // TODO: axis deadzone
             case SDL_JOYAXISMOTION:
-                std::cout<<"Joyaxismotion: "<<ev.jaxis.which<<' '<<(int)ev.jaxis.axis<<' '<<ev.jaxis.value<<'\n';
+            case SDL_CONTROLLERAXISMOTION:
+            {
+                auto move = joysticks.at(ev.jaxis.which).menu_move(ev);
+
+                switch(move)
+                {
+                    case SDL::Joystick::Dir::PREV:
+                        menu_prev();
+                        break;
+                    case SDL::Joystick::Dir::NEXT:
+                        menu_next();
+                        break;
+                    default:
+                        break;
+                }
+
                 break;
+            }
+
             case SDL_JOYHATMOTION:
                 std::cout<<"Joyhat: "<<ev.jhat.which<<' '<<(int)ev.jhat.hat<<' '<<(int)ev.jhat.value<<'\n';
+                switch(ev.jhat.value)
+                {
+                    case SDL_HAT_LEFT:
+                    case SDL_HAT_UP:
+                    case SDL_HAT_LEFTUP:
+                        menu_prev();
+                        break;
+
+                    case SDL_HAT_RIGHT:
+                    case SDL_HAT_DOWN:
+                    case SDL_HAT_RIGHTDOWN:
+                        menu_next();
+                        break;
+                    default:
+                        break;
+                }
                 break;
 
             default:
