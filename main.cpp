@@ -2,9 +2,11 @@
 #include <map>
 
 #include "font.hpp"
+#include "joystick.hpp"
 #include "sdl.hpp"
+#include "texture.hpp"
 
-// TODO: CEC input?
+// TODO: CEC input - it ought to try to load each time the meun is loaded (which shouldn't take anything special other than gracefully handling the error.
 // TODO: load / parse config file
 // TODO: unload everything and launch selected program
 // TODO: power-off, reboot options
@@ -51,7 +53,7 @@ int main(int argc, char * argv[])
     while(running)
     {
         SDL_Event ev;
-        if(SDL_WaitEvent(&ev) < 0)
+        if(SDL_WaitEvent(&ev) < 0) // might need to change this to SDL_WaitEventTimeout so CEC inputs can come through - experiment to see if that's the case
             SDL::sdl_error("Error getting SDL event");
 
         switch(ev.type)
@@ -100,6 +102,7 @@ int main(int argc, char * argv[])
                 }
                 break;
 
+            // TODO: we should probably do something more sane on controllers
             case SDL_JOYBUTTONDOWN: // all joystick buttons launch the selected app
                 std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
                 menu_select();
@@ -108,7 +111,7 @@ int main(int argc, char * argv[])
             case SDL_JOYAXISMOTION:
             case SDL_CONTROLLERAXISMOTION:
             {
-                auto move = joysticks.at(ev.jaxis.which).menu_move(ev);
+                auto move = joysticks.at(ev.type == SDL_JOYAXISMOTION ? ev.jaxis.which : ev.caxis.which).menu_move(ev);
 
                 switch(move)
                 {

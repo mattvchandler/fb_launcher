@@ -24,7 +24,8 @@ find_package(Fontconfig REQUIRED)
 
 add_executable(${PROJECT_NAME}
     main.cpp
-    sdl.cpp
+    joystick.cpp
+    texture.cpp
     font.cpp)
 
 target_link_libraries(${PROJECT_NAME}

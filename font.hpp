@@ -6,7 +6,7 @@
 
 #include <SDL2/SDL_ttf.h>
 
-#include "sdl.hpp"
+#include "texture.hpp"
 
 namespace SDL
 {
