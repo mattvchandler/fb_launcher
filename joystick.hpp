@@ -13,8 +13,8 @@ namespace SDL
     class Joystick
     {
     private:
-        std::variant<SDL_Joystick*, SDL_GameController*> joystick {static_cast<SDL_Joystick*>(nullptr)};
-        std::vector<char> centered;
+        std::variant<SDL_Joystick*, SDL_GameController*> joystick_ {static_cast<SDL_Joystick*>(nullptr)};
+        std::vector<char> centered_;
     public:
 
         enum class Dir {NONE, PREV, NEXT};
@@ -30,6 +30,13 @@ namespace SDL
         Dir menu_move(const SDL_Event & ev);
         const char * name();
 
+        SDL_GameController * gc();
+        const SDL_GameController * gc() const;
+
+        SDL_Joystick * joy();
+        const SDL_Joystick * joy() const;
+
+        bool is_gc() const { return std::holds_alternative<SDL_GameController*>(joystick_); }
     };
 }
 #endif // JOYSTICK_HPP

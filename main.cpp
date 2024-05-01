@@ -102,11 +102,73 @@ int main(int argc, char * argv[])
                 }
                 break;
 
-            // TODO: we should probably do something more sane on controllers
             case SDL_JOYBUTTONDOWN: // all joystick buttons launch the selected app
-                std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
-                menu_select();
+                if(!joysticks.at(ev.jbutton.which).is_gc())
+                {
+                    std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
+                    menu_select();
+                }
                 break;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+                if(joysticks.at(ev.jbutton.which).is_gc())
+                {
+                    std::cout<<"Controllerbutton: "<<ev.cbutton.which<<' '<<(int)ev.cbutton.button<<' '<<(int)ev.cbutton.state<<'\n';
+
+                    switch(ev.cbutton.button)
+                    {
+                        case SDL_CONTROLLER_BUTTON_A:
+                        case SDL_CONTROLLER_BUTTON_B:
+                        case SDL_CONTROLLER_BUTTON_X:
+                        case SDL_CONTROLLER_BUTTON_Y:
+                        case SDL_CONTROLLER_BUTTON_START:
+                        case SDL_CONTROLLER_BUTTON_BACK:
+                        case SDL_CONTROLLER_BUTTON_GUIDE:
+                            menu_select();
+                            break;
+
+                        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                        case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                        case SDL_CONTROLLER_BUTTON_LEFTSTICK:
+                            menu_prev();
+                            break;
+
+                        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                        case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                        case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+                            menu_next();
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+                break;
+
+            case SDL_JOYHATMOTION:
+                if(!joysticks.at(ev.jhat.which).is_gc())
+                {
+                    std::cout<<"Joyhat: "<<ev.jhat.which<<' '<<(int)ev.jhat.hat<<' '<<(int)ev.jhat.value<<'\n';
+                    switch(ev.jhat.value)
+                    {
+                        case SDL_HAT_LEFT:
+                        case SDL_HAT_UP:
+                        case SDL_HAT_LEFTUP:
+                            menu_prev();
+                            break;
+
+                        case SDL_HAT_RIGHT:
+                        case SDL_HAT_DOWN:
+                        case SDL_HAT_RIGHTDOWN:
+                            menu_next();
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                }
 
             case SDL_JOYAXISMOTION:
             case SDL_CONTROLLERAXISMOTION:
@@ -128,30 +190,10 @@ int main(int argc, char * argv[])
                 break;
             }
 
-            // even though we're using the GameController API, this is still called on the D-pad
-            case SDL_JOYHATMOTION:
-                std::cout<<"Joyhat: "<<ev.jhat.which<<' '<<(int)ev.jhat.hat<<' '<<(int)ev.jhat.value<<'\n';
-                switch(ev.jhat.value)
-                {
-                    case SDL_HAT_LEFT:
-                    case SDL_HAT_UP:
-                    case SDL_HAT_LEFTUP:
-                        menu_prev();
-                        break;
-
-                    case SDL_HAT_RIGHT:
-                    case SDL_HAT_DOWN:
-                    case SDL_HAT_RIGHTDOWN:
-                        menu_next();
-                        break;
-                    default:
-                        break;
-                }
-                break;
-
             default:
                 break;
         }
+
 
         std::cout.flush();
         SDL_RenderClear(renderer);
