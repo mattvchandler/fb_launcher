@@ -21,15 +21,22 @@ find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(PNG REQUIRED)
 find_package(Fontconfig REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(CEC libcec REQUIRED)
 
 add_executable(${PROJECT_NAME}
     main.cpp
+    cec.cpp
+    font.cpp
     joystick.cpp
-    texture.cpp
-    font.cpp)
+    texture.cpp)
+
+target_include_directories(${PROJECT_NAME}
+    PRIVATE ${CEC_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME}
     SDL2::Main
     SDL2::TTF
     PNG::PNG
-    Fontconfig::Fontconfig)
+    Fontconfig::Fontconfig
+    ${CEC_LIBRARIES})

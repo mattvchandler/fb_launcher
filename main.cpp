@@ -1,12 +1,12 @@
 #include <iostream>
 #include <map>
 
+#include "cec.hpp"
 #include "font.hpp"
 #include "joystick.hpp"
 #include "sdl.hpp"
 #include "texture.hpp"
 
-// TODO: CEC input - it ought to try to load each time the meun is loaded (which shouldn't take anything special other than gracefully handling the error.
 // TODO: load / parse config file
 // TODO: unload everything and launch selected program
 // TODO: power-off, reboot options
@@ -48,6 +48,13 @@ int main(int argc, char * argv[])
     auto text = font.render_text(renderer, "Testing this\nText", SDL_Color{0xFF, 0xFF, 0xFF, 0xFF});
 
     auto joysticks = std::map<int, SDL::Joystick>{};
+
+    CEC_Input cec;
+    cec.register_up(menu_prev);
+    cec.register_left(menu_prev);
+    cec.register_down(menu_next);
+    cec.register_right(menu_next);
+    cec.register_select(menu_select);
 
     bool running = true;
     while(running)
