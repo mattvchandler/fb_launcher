@@ -43,9 +43,10 @@ int main(int argc, char * argv[])
     SDL_ShowCursor(SDL_DISABLE);
 
     auto tex = SDL::Texture(renderer, argv[1]);
-    auto font = SDL::Font("sans-serif", 20);
 
-    auto text = font.render_text(renderer, "Testing this\nText", SDL_Color{0xFF, 0xFF, 0xFF, 0xFF});
+    // TODO: scale to window size - will need to be reloaded if window changes size
+    auto title_font = SDL::Font("sans-serif", 40);
+    auto desc_font = SDL::Font("sans-serif", 20);
 
     auto joysticks = std::map<int, SDL::Joystick>{};
 
@@ -201,11 +202,43 @@ int main(int argc, char * argv[])
                 break;
         }
 
-
         std::cout.flush();
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, tex, nullptr, nullptr);
-        text.render(renderer, 0, 0);
+
+        int w = 0, h = 0;
+        SDL_GetRendererOutputSize(renderer, &w, &h);
+
+        // units are percentages
+        constexpr auto row_height = 20;
+        constexpr auto horiz_margin = 10;
+        constexpr auto row_spacing = 10;
+        constexpr auto col_spacing = 5;
+
+        const auto row_height_px = row_height * h / 100;
+        const auto horiz_margin_px = horiz_margin * w / 100;
+        const auto row_spacing_px = row_spacing * h / 100;
+        const auto col_spacing_px = col_spacing * w / 100;
+
+        const auto image_size_px = row_height_px;
+        const auto row_top_px = (h - row_height_px) / 2;
+        const auto text_x = horiz_margin_px + image_size_px + col_spacing_px;
+
+        // auto text = font.render_text(renderer, "Testing this\nText", SDL_Color{0xFF, 0xFF, 0xFF, 0xFF});
+        auto title_text = title_font.render_text(renderer, "Menu item # 1", {0xFF, 0xFF, 0xFF, 0xFF});
+        auto desc_text = desc_font.render_text(renderer, "This is the description for my menu item. It is rather long and ought to wrap so I'm going to keep typing to make sure that it does and this is probably enough text that it will wrap so I'm going to stop now.",
+                {0xFF, 0xFF, 0xFF, 0xFF}, w - (2 * horiz_margin_px + image_size_px + col_spacing_px));
+
+        tex.render(renderer, horiz_margin_px, row_top_px, image_size_px, image_size_px);
+        title_text.render(renderer, text_x, row_top_px);
+        desc_text.render(renderer, text_x, row_top_px + title_text.get_height());
+
+        // TODO fade upper & lower rows. Also make a row function
+        tex.render(renderer, horiz_margin_px, row_top_px - (row_height_px + row_spacing_px), image_size_px, image_size_px);
+        tex.render(renderer, horiz_margin_px, row_top_px + (row_height_px + row_spacing_px), image_size_px, image_size_px);
+
+        // TODO: BG image (blended with black?)
+        // SDL_RenderCopy(renderer, tex, nullptr, nullptr);
+
         SDL_RenderPresent(renderer);
     }
 
