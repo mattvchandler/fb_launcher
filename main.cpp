@@ -1,9 +1,11 @@
+#include <functional>
 #include <iostream>
 #include <map>
 
 #include "cec.hpp"
 #include "font.hpp"
 #include "joystick.hpp"
+#include "menu.hpp"
 #include "sdl.hpp"
 #include "texture.hpp"
 
@@ -11,21 +13,6 @@
 // TODO: unload everything and launch selected program
 // TODO: power-off, reboot options
 // TODO: autolaunch 1st app (Kodi)
-
-void menu_prev()
-{
-    std::cout<<"Prev menu item stub\n";
-}
-
-void menu_next()
-{
-    std::cout<<"Next menu item stub\n";
-}
-
-void menu_select()
-{
-    std::cout<<"Menu select stub\n";
-}
 
 int main(int argc, char * argv[])
 {
@@ -39,23 +26,22 @@ int main(int argc, char * argv[])
     auto ttf_lib = SDL::TTF{};
 
     auto window = SDL::Window{"fb_launcher"};
-    auto renderer = SDL::Renderer(window);
     SDL_ShowCursor(SDL_DISABLE);
+
+    auto renderer = SDL::Renderer(window);
+    auto joysticks = std::map<int, SDL::Joystick>{};
+
+    auto menu = Menu{};
 
     auto tex = SDL::Texture(renderer, argv[1]);
 
     // TODO: scale to window size - will need to be reloaded if window changes size
-    auto title_font = SDL::Font("sans-serif", 40);
-    auto desc_font = SDL::Font("sans-serif", 20);
-
-    auto joysticks = std::map<int, SDL::Joystick>{};
-
     CEC_Input cec;
-    cec.register_up(menu_prev);
-    cec.register_left(menu_prev);
-    cec.register_down(menu_next);
-    cec.register_right(menu_next);
-    cec.register_select(menu_select);
+    cec.register_up(std::bind(&Menu::prev, &menu));
+    cec.register_left(std::bind(&Menu::prev, &menu));
+    cec.register_down(std::bind(&Menu::next, &menu));
+    cec.register_right(std::bind(&Menu::next, &menu));
+    cec.register_select(std::bind(&Menu::select, &menu));
 
     bool running = true;
     while(running)
@@ -68,6 +54,18 @@ int main(int argc, char * argv[])
         {
             case SDL_QUIT:
                 running = false;
+                break;
+
+            case SDL_WINDOWEVENT:
+                if(ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                {
+                    int w, h;
+                    SDL_GetRendererOutputSize(renderer, &w, &h);
+
+                    std::cout<<"Window resize event: "<<w<<' '<<h<<'\n';
+
+                    menu.resize(w, h);
+                }
                 break;
 
             case SDL_JOYDEVICEADDED:
@@ -88,7 +86,7 @@ int main(int argc, char * argv[])
                 {
                     case SDLK_RETURN:
                     case SDLK_KP_ENTER:
-                        menu_select();
+                        menu.select();
                         break;
 
                     case SDLK_ESCAPE:
@@ -97,12 +95,12 @@ int main(int argc, char * argv[])
 
                     case SDLK_LEFT:
                     case SDLK_UP:
-                        menu_prev();
+                        menu.prev();
                         break;
 
                     case SDLK_RIGHT:
                     case SDLK_DOWN:
-                        menu_next();
+                        menu.next();
                         break;
 
                     default:
@@ -114,7 +112,7 @@ int main(int argc, char * argv[])
                 if(!joysticks.at(ev.jbutton.which).is_gc())
                 {
                     std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
-                    menu_select();
+                    menu.select();
                 }
                 break;
 
@@ -132,21 +130,21 @@ int main(int argc, char * argv[])
                         case SDL_CONTROLLER_BUTTON_START:
                         case SDL_CONTROLLER_BUTTON_BACK:
                         case SDL_CONTROLLER_BUTTON_GUIDE:
-                            menu_select();
+                            menu.select();
                             break;
 
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
                         case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
                         case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
                         case SDL_CONTROLLER_BUTTON_LEFTSTICK:
-                            menu_prev();
+                            menu.prev();
                             break;
 
                         case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
                         case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
-                            menu_next();
+                            menu.next();
                             break;
 
                         default:
@@ -164,13 +162,13 @@ int main(int argc, char * argv[])
                         case SDL_HAT_LEFT:
                         case SDL_HAT_UP:
                         case SDL_HAT_LEFTUP:
-                            menu_prev();
+                            menu.prev();
                             break;
 
                         case SDL_HAT_RIGHT:
                         case SDL_HAT_DOWN:
                         case SDL_HAT_RIGHTDOWN:
-                            menu_next();
+                            menu.next();
                             break;
                         default:
                             break;
@@ -186,10 +184,10 @@ int main(int argc, char * argv[])
                 switch(move)
                 {
                     case SDL::Joystick::Dir::PREV:
-                        menu_prev();
+                        menu.prev();
                         break;
                     case SDL::Joystick::Dir::NEXT:
-                        menu_next();
+                        menu.next();
                         break;
                     default:
                         break;
@@ -205,38 +203,8 @@ int main(int argc, char * argv[])
         std::cout.flush();
         SDL_RenderClear(renderer);
 
-        int w = 0, h = 0;
-        SDL_GetRendererOutputSize(renderer, &w, &h);
+        menu.draw(renderer, tex);
 
-        // units are percentages
-        constexpr auto row_height = 20;
-        constexpr auto horiz_margin = 10;
-        constexpr auto row_spacing = 10;
-        constexpr auto col_spacing = 5;
-
-        const auto row_height_px = row_height * h / 100;
-        const auto horiz_margin_px = horiz_margin * w / 100;
-        const auto row_spacing_px = row_spacing * h / 100;
-        const auto col_spacing_px = col_spacing * w / 100;
-
-        const auto image_size_px = row_height_px;
-        const auto row_top_px = (h - row_height_px) / 2;
-        const auto text_x = horiz_margin_px + image_size_px + col_spacing_px;
-
-        // auto text = font.render_text(renderer, "Testing this\nText", SDL_Color{0xFF, 0xFF, 0xFF, 0xFF});
-        auto title_text = title_font.render_text(renderer, "Menu item # 1", {0xFF, 0xFF, 0xFF, 0xFF});
-        auto desc_text = desc_font.render_text(renderer, "This is the description for my menu item. It is rather long and ought to wrap so I'm going to keep typing to make sure that it does and this is probably enough text that it will wrap so I'm going to stop now.",
-                {0xFF, 0xFF, 0xFF, 0xFF}, w - (2 * horiz_margin_px + image_size_px + col_spacing_px));
-
-        tex.render(renderer, horiz_margin_px, row_top_px, image_size_px, image_size_px);
-        title_text.render(renderer, text_x, row_top_px);
-        desc_text.render(renderer, text_x, row_top_px + title_text.get_height());
-
-        // TODO fade upper & lower rows. Also make a row function
-        tex.render(renderer, horiz_margin_px, row_top_px - (row_height_px + row_spacing_px), image_size_px, image_size_px);
-        tex.render(renderer, horiz_margin_px, row_top_px + (row_height_px + row_spacing_px), image_size_px, image_size_px);
-
-        // TODO: BG image (blended with black?)
         // SDL_RenderCopy(renderer, tex, nullptr, nullptr);
 
         SDL_RenderPresent(renderer);

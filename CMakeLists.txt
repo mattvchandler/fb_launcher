@@ -29,6 +29,7 @@ add_executable(${PROJECT_NAME}
     cec.cpp
     font.cpp
     joystick.cpp
+    menu.cpp
     texture.cpp)
 
 target_include_directories(${PROJECT_NAME}
