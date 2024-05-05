@@ -55,7 +55,6 @@ void Menu::resize(int w, int h)
 
 void Menu::draw_row(int pos, SDL::Renderer & renderer, SDL::Texture & tex)
 {
-    // TODO fade upper & lower rows
     const auto row_height_px = row_height * h_ / 100;
     const auto horiz_margin_px = horiz_margin * w_ / 100;
     const auto row_spacing_px = row_spacing * h_ / 100;
@@ -69,6 +68,11 @@ void Menu::draw_row(int pos, SDL::Renderer & renderer, SDL::Texture & tex)
     auto title_text = title_font_.render_text(renderer, "Menu item # 1", text_color);
     auto desc_text = desc_font_.render_text(renderer, "This is the description for my menu item. It is rather long and ought to wrap so I'm going to keep typing to make sure that it does and this is probably enough text that it will wrap so I'm going to stop now.",
             text_color, w_ - (2 * horiz_margin_px + image_size_px + col_spacing_px));
+
+    const auto fade = pos == 0 ? 255 : 64;
+    SDL_SetTextureColorMod(tex, fade, fade, fade);
+    SDL_SetTextureColorMod(title_text, fade, fade, fade);
+    SDL_SetTextureColorMod(desc_text, fade, fade, fade);
 
     tex.render(renderer, horiz_margin_px, row_top_px, image_size_px, image_size_px);
     title_text.render(renderer, text_x, row_top_px);

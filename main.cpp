@@ -35,7 +35,6 @@ int main(int argc, char * argv[])
 
     auto tex = SDL::Texture(renderer, argv[1]);
 
-    // TODO: scale to window size - will need to be reloaded if window changes size
     CEC_Input cec;
     cec.register_up(std::bind(&Menu::prev, &menu));
     cec.register_left(std::bind(&Menu::prev, &menu));
