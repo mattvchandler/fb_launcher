@@ -31,7 +31,34 @@ namespace SDL
             if(!texture_)
                 sdl_error("Unable to create SDL texture");
         }
-        ~Texture() { SDL_DestroyTexture(texture_); }
+        ~Texture()
+        {
+            if(texture_)
+                SDL_DestroyTexture(texture_);
+        }
+
+        Texture(const Texture &) = delete;
+        Texture &operator=(const Texture &) = delete;
+
+        Texture(Texture && t)
+        {
+            texture_ = t.texture_;
+            t.texture_ = nullptr;
+            width_ = t.width_;
+            height_ = t.height_;
+        }
+        Texture &operator=(Texture && t)
+        {
+            if(&t != this)
+            {
+                texture_ = t.texture_;
+                t.texture_ = nullptr;
+                width_ = t.width_;
+                height_ = t.height_;
+            }
+            return *this;
+        }
+
         operator const SDL_Texture*() const { return texture_; }
         operator SDL_Texture*() { return texture_; }
 

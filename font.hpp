@@ -28,8 +28,33 @@ namespace SDL
     struct Font
     {
         TTF_Font * font {nullptr};
-        explicit Font(const std::string font_name = "sans-serif", int ptsize = 12);
-        ~Font() { TTF_CloseFont(font); }
+        Font() = default;
+
+        explicit Font(const std::string font_name, int ptsize);
+        ~Font()
+        {
+            if(font)
+                TTF_CloseFont(font);
+        }
+
+        Font(const Font &) = delete;
+        Font &operator=(const Font &) = delete;
+
+        Font(Font && f)
+        {
+            font = f.font;
+            f.font = nullptr;
+        }
+        Font &operator=(Font && f)
+        {
+            if(&f != this)
+            {
+                font = f.font;
+                f.font = nullptr;
+            }
+            return *this;
+        }
+
         operator const TTF_Font*() const { return font; }
         operator TTF_Font*() { return font; }
 

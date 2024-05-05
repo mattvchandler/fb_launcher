@@ -1,6 +1,7 @@
 #include "font.hpp"
 
 #include <fontconfig/fontconfig.h>
+#include <stdexcept>
 
 namespace {
     struct Fontconfig
@@ -66,6 +67,9 @@ namespace SDL
 
     Texture Font::render_text(Renderer & renderer, const std::string & text, SDL_Color color, int wrap_length)
     {
+        if(!font)
+            throw std::runtime_error{"Font::render_text called with no font defined"};
+
         auto text_surface = Surface{TTF_RenderUTF8_Blended_Wrapped(font, text.c_str(), color, wrap_length)};
         if(!text_surface.surface)
             ttf_error("Could not render text");

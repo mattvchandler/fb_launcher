@@ -38,6 +38,8 @@ namespace SDL
 
     void Texture::render(Renderer & renderer, int x, int y, int size_w, int size_h)
     {
+        if(!texture_)
+            throw std::runtime_error{"Texture::render called with no texture defined"};
         render_dest_.x = x;
         render_dest_.y = y;
         render_dest_.w = size_w ? size_w : width_;

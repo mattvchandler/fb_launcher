@@ -38,6 +38,12 @@ namespace SDL
                 sdl_error("Unable to create SDL window");
         }
         ~Window() { SDL_DestroyWindow(window); }
+
+        Window(const Window &) = delete;
+        Window(Window &&) = delete;
+        Window &operator=(const Window &) = delete;
+        Window &operator=(Window &&) = delete;
+
         operator const SDL_Window*() const { return window; }
         operator SDL_Window*() { return window; }
     };
@@ -52,6 +58,12 @@ namespace SDL
                 sdl_error("Unable to create SDL renderer");
         }
         ~Renderer() { SDL_DestroyRenderer(renderer); }
+
+        Renderer(const Renderer &) = delete;
+        Renderer(Renderer &&) = delete;
+        Renderer &operator=(const Renderer &) = delete;
+        Renderer &operator=(Renderer &&) = delete;
+
         operator const SDL_Renderer*() const { return renderer; }
         operator SDL_Renderer*() { return renderer; }
     };
@@ -61,6 +73,10 @@ namespace SDL
         SDL_Surface * surface {nullptr};
         explicit Surface(SDL_Surface * s): surface{s} {}
         ~Surface() { if(surface) SDL_FreeSurface(surface); }
+        Surface(const Surface &) = delete;
+        Surface(Surface &&) = delete;
+        Surface &operator=(const Surface &) = delete;
+        Surface &operator=(Surface &&) = delete;
         operator const SDL_Surface*() const { return surface; }
         operator SDL_Surface*() { return surface; }
         const SDL_Surface * operator->() const {return surface; }
