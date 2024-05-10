@@ -15,6 +15,7 @@ namespace SDL
         SDL_Rect render_dest_;
 
     public:
+        Texture() = default;
         Texture(Renderer & renderer, int width, int height):
             texture_{SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width, height)},
             width_{width}, height_{height}

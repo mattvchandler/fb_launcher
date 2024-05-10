@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 
+#include "app.hpp"
 #include "menu.hpp"
 
 // TODO: power-off, reboot options
@@ -12,26 +13,31 @@ int main(int argc, char * argv[])
     // TODO: probably going to need more sophisticated argparse
     if(argc < 2)
     {
-        std::cerr<<"Must specify PNG image to display\n";
-        return 1;
-    }
-    if(argc < 3)
-    {
-        std::cerr<<"Must specify command\n";
+        std::cerr<<"Must specify app CSV file\n";
         return 1;
     }
 
-    // TODO: load / parse config file
+    // load / parse config file
+    auto apps = read_app_list(argv[1]);
+
+    // TODO: temporary
+    if(apps.empty())
+    {
+        std::cerr<<"Must specify app CSV file that actually contains apps\n";
+        return 1;
+    }
 
     // TODO: 'select' 1st app at startup (maybe controlled by cmdline args - will need to parse those too in that case)
     // TODO: exit condition!
+
+    auto selection_index = 0u;
     while(true)
     {
         // TODO: launch selected app
         // TODO: capture / log output
-        std::system(argv[2]);
+        // std::system(apps[selection_index].command);
 
-        auto menu = Menu{argv[1]};
+        auto menu = Menu{apps};
         // TODO: run menu, get selection
         // TODO: excpetion handling (what should we even do? most of these ought to be fatal)
         menu.run();

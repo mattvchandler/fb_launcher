@@ -26,6 +26,7 @@ pkg_check_modules(CEC libcec REQUIRED)
 
 add_executable(${PROJECT_NAME}
     main.cpp
+    app.cpp
     cec.cpp
     font.cpp
     joystick.cpp

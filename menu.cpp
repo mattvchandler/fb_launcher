@@ -1,8 +1,8 @@
 #include "menu.hpp"
-#include "sdl.hpp"
-#include "texture.hpp"
 
+#include <functional>
 #include <iostream> // TODO: delete
+#include <vector>
 
 namespace
 {
@@ -15,8 +15,8 @@ namespace
     constexpr auto text_color = SDL_Color {0xFF, 0xFF, 0xFF, 0xFF};
 }
 
-Menu::Menu(const std::string & test_image):
-    test_image_{renderer_, test_image}
+Menu::Menu(const std::vector<App> & apps):
+    apps_{apps}
 {
     SDL_ShowCursor(SDL_DISABLE);
 
@@ -25,6 +25,14 @@ Menu::Menu(const std::string & test_image):
     cec_.register_down(std::bind(&Menu::next, this));
     cec_.register_right(std::bind(&Menu::next, this));
     cec_.register_select(std::bind(&Menu::select, this));
+
+    for(auto && a: apps_)
+    {
+        // Note: text textures are generated in resize()
+        app_textures_.emplace_back(Menu_textures{
+            .thumbnail = SDL::Texture{renderer_, a.thumbnail_path},
+            .bg = SDL::Texture{renderer_, a.thumbnail_path}});
+    }
 }
 
 int Menu::run()
@@ -218,16 +226,32 @@ void Menu::select()
 
 void Menu::resize(int w, int h)
 {
-    w_ = w; h_ = h;
+    if(w != w_ || h != h_)
+    {
+        w_ = w; h_ = h;
 
-    auto font_size = h / 20;
+        const auto font_size = h / 20;
 
-    std::cout<<"Font sizes: "<<font_size<<" "<<font_size/2<<'\n';
+        // TODO: don't repeat
+        const auto row_height_px = row_height * h_ / 100;
+        const auto horiz_margin_px = horiz_margin * w_ / 100;
+        const auto col_spacing_px = col_spacing * w_ / 100;
+        const auto image_size_px = row_height_px;
 
-    title_font_ = SDL::Font{"sans-serif", font_size};
-    desc_font_ = SDL::Font{"sans-serif", font_size / 2};
+        const auto text_wrap_px = w_ - (2 * horiz_margin_px + image_size_px + col_spacing_px);
+
+        std::cout<<"Font sizes: "<<font_size<<" "<<font_size/2<<'\n';
+
+        auto title_font = SDL::Font{"sans-serif", font_size};
+        auto desc_font = SDL::Font{"sans-serif", font_size / 2};
+
+        for(auto i = 0u; i < std::size(apps_); ++i)
+        {
+            app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, text_wrap_px);
+            app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, text_wrap_px);
+        }
+    }
 }
-
 
 void Menu::draw()
 {
@@ -235,12 +259,12 @@ void Menu::draw()
         return;
 
     // TODO: BG image (blended with black?)
-    draw_row(0, renderer_, test_image_);
-    draw_row(-1, renderer_, test_image_);
-    draw_row(1, renderer_, test_image_);
+    draw_row(-1);
+    draw_row(0);
+    draw_row(1);
 }
 
-void Menu::draw_row(int pos, SDL::Renderer & renderer_, SDL::Texture & tex)
+void Menu::draw_row(int index)
 {
     const auto row_height_px = row_height * h_ / 100;
     const auto horiz_margin_px = horiz_margin * w_ / 100;
@@ -248,20 +272,17 @@ void Menu::draw_row(int pos, SDL::Renderer & renderer_, SDL::Texture & tex)
     const auto col_spacing_px = col_spacing * w_ / 100;
 
     const auto image_size_px = row_height_px;
-    const auto row_top_px = h_ / 2 + pos * (row_height_px + row_spacing_px) - row_height_px / 2;
+    const auto row_top_px = h_ / 2 + index * (row_height_px + row_spacing_px) - row_height_px / 2;
     const auto text_x = horiz_margin_px + image_size_px + col_spacing_px;
 
-    // TODO: get text from file, and cache texture
-    auto title_text = title_font_.render_text(renderer_, "Menu item # 1", text_color);
-    auto desc_text = desc_font_.render_text(renderer_, "This is the description for my menu item. It is rather long and ought to wrap so I'm going to keep typing to make sure that it does and this is probably enough text that it will wrap so I'm going to stop now.",
-            text_color, w_ - (2 * horiz_margin_px + image_size_px + col_spacing_px));
+    auto & tex = app_textures_[index];
 
-    const auto fade = pos == 0 ? 255 : 64;
-    SDL_SetTextureColorMod(tex, fade, fade, fade);
-    SDL_SetTextureColorMod(title_text, fade, fade, fade);
-    SDL_SetTextureColorMod(desc_text, fade, fade, fade);
+    const auto fade = index == 0 ? 255 : 64;
+    SDL_SetTextureColorMod(tex.thumbnail, fade, fade, fade);
+    SDL_SetTextureColorMod(tex.title, fade, fade, fade);
+    SDL_SetTextureColorMod(tex.desc, fade, fade, fade);
 
-    tex.render(renderer_, horiz_margin_px, row_top_px, image_size_px, image_size_px);
-    title_text.render(renderer_, text_x, row_top_px);
-    desc_text.render(renderer_, text_x, row_top_px + title_text.get_height());
+    tex.thumbnail.render(renderer_, horiz_margin_px, row_top_px, image_size_px, image_size_px);
+    tex.title.render(renderer_, text_x, row_top_px);
+    tex.desc.render(renderer_, text_x, row_top_px + tex.title.get_height());
 }
