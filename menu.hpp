@@ -15,12 +15,15 @@ class Menu
 public:
     Menu(const std::vector<App> & apps);
     int run();
+    int get_selection() const { return index_; }
+    int get_exited() const { return exited_; }
 
 private:
-
     const std::vector<App> & apps_;
 
-    std::size_t index_ = 0u;
+    bool running_ = false;
+    bool exited_ = false;
+    int index_ = 0u;
 
     SDL::SDL sdl_lib_{SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER};
     SDL::TTF ttf_lib_;

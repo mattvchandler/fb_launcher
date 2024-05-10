@@ -15,9 +15,9 @@ std::vector<App> read_app_list(const std::string & app_list_path)
 
         apps.emplace_back(App
         {
-            .title          = std::get<0>(row_t),
-            .desc           = std::get<1>(row_t),
-            .command        = std::get<2>(row_t),
+            .title          = std::get<0>(row_t).empty() ? std::string{" "} : std::get<0>(row_t),
+            .desc           = std::get<1>(row_t).empty() ? std::string{" "} : std::get<1>(row_t),
+            .command        = std::get<2>(row_t).empty() ? std::string{"/dev/false"} : std::get<2>(row_t),
             .thumbnail_path = std::get<3>(row_t),
             .bg_path        = std::get<4>(row_t),
             .input_cec      = std::get<5>(row_t) == 0 ? false : true,

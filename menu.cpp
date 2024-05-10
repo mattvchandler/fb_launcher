@@ -37,8 +37,9 @@ Menu::Menu(const std::vector<App> & apps):
 
 int Menu::run()
 {
-    bool running = true;
-    while(running)
+    exited_ = false;
+    running_ = true;
+    while(running_)
     {
         SDL_Event ev;
         if(SDL_WaitEvent(&ev) < 0) // might need to change this to SDL_WaitEventTimeout so CEC inputs can come through - experiment to see if that's the case
@@ -47,7 +48,8 @@ int Menu::run()
         switch(ev.type)
         {
             case SDL_QUIT:
-                running = false;
+                running_ = false;
+                exited_ = true;
                 break;
 
             case SDL_WINDOWEVENT:
@@ -84,7 +86,8 @@ int Menu::run()
                         break;
 
                     case SDLK_ESCAPE:
-                        running = false;
+                        running_ = false;
+                        exited_ = true;
                         break;
 
                     case SDLK_LEFT:
@@ -220,8 +223,7 @@ void Menu::next()
 
 void Menu::select()
 {
-    std::cout<<"Menu select stub\n";
-    // TODO: set selection & exit
+    running_ = false;
 }
 
 void Menu::resize(int w, int h)
