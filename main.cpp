@@ -20,17 +20,9 @@ int main(int argc, char * argv[])
     // load / parse config file
     auto apps = read_app_list(argv[1]);
 
-    // TODO: temporary
-    if(apps.empty())
-    {
-        std::cerr<<"Must specify app CSV file that actually contains apps\n";
-        return 1;
-    }
-
     // TODO: 'select' 1st app at startup (maybe controlled by cmdline args - will need to parse those too in that case)
     // TODO: exit condition!
 
-    auto selection_index = 0u;
     while(true)
     {
         // TODO: launch selected app
@@ -44,4 +36,3 @@ int main(int argc, char * argv[])
         break; // TODO: temporary
     }
 }
-

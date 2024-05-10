@@ -50,7 +50,7 @@ private:
     void resize(int w, int h);
 
     void draw();
-    void draw_row(int index);
+    void draw_row(int pos);
 };
 
 #endif // MENU_HPP

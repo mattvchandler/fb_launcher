@@ -24,6 +24,8 @@ find_package(Fontconfig REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(CEC libcec REQUIRED)
 
+add_subdirectory(csvpp)
+
 add_executable(${PROJECT_NAME}
     main.cpp
     app.cpp
@@ -41,4 +43,5 @@ target_link_libraries(${PROJECT_NAME}
     SDL2::TTF
     PNG::PNG
     Fontconfig::Fontconfig
+    csvpp::csvpp
     ${CEC_LIBRARIES})

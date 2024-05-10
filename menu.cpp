@@ -30,8 +30,8 @@ Menu::Menu(const std::vector<App> & apps):
     {
         // Note: text textures are generated in resize()
         app_textures_.emplace_back(Menu_textures{
-            .thumbnail = SDL::Texture{renderer_, a.thumbnail_path},
-            .bg = SDL::Texture{renderer_, a.thumbnail_path}});
+            .thumbnail = a.thumbnail_path.empty() ? SDL::Texture{} : SDL::Texture{renderer_, a.thumbnail_path},
+            .bg        = a.bg_path.empty()        ? SDL::Texture{} : SDL::Texture{renderer_, a.bg_path}});
     }
 }
 
@@ -210,18 +210,18 @@ int Menu::run()
 // TODO: animate scrolling
 void Menu::prev()
 {
-    std::cout<<"Prev menu item stub\n";
+    index_ = index_ == 0 ? std::size(apps_) - 1 : index_ - 1;
 }
 
 void Menu::next()
 {
-    std::cout<<"Next menu item stub\n";
+    index_ = index_ == std::size(apps_) - 1 ? 0 : index_ + 1;
 }
 
 void Menu::select()
 {
     std::cout<<"Menu select stub\n";
-    // TODO: set selection
+    // TODO: set selection & exit
 }
 
 void Menu::resize(int w, int h)
@@ -264,7 +264,7 @@ void Menu::draw()
     draw_row(1);
 }
 
-void Menu::draw_row(int index)
+void Menu::draw_row(int pos)
 {
     const auto row_height_px = row_height * h_ / 100;
     const auto horiz_margin_px = horiz_margin * w_ / 100;
@@ -272,12 +272,19 @@ void Menu::draw_row(int index)
     const auto col_spacing_px = col_spacing * w_ / 100;
 
     const auto image_size_px = row_height_px;
-    const auto row_top_px = h_ / 2 + index * (row_height_px + row_spacing_px) - row_height_px / 2;
+    const auto row_top_px = h_ / 2 + pos * (row_height_px + row_spacing_px) - row_height_px / 2;
     const auto text_x = horiz_margin_px + image_size_px + col_spacing_px;
 
-    auto & tex = app_textures_[index];
+    auto row_index = static_cast<int>(index_) + pos;
 
-    const auto fade = index == 0 ? 255 : 64;
+    if(row_index >= static_cast<int>(std::size(apps_)))
+        row_index %= std::size(apps_);
+    while(row_index < 0)
+        row_index += std::size(apps_);
+
+    auto & tex = app_textures_[row_index];
+
+    const auto fade = pos == 0 ? 255 : 64;
     SDL_SetTextureColorMod(tex.thumbnail, fade, fade, fade);
     SDL_SetTextureColorMod(tex.title, fade, fade, fade);
     SDL_SetTextureColorMod(tex.desc, fade, fade, fade);

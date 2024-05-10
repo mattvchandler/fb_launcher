@@ -14,14 +14,14 @@ namespace SDL
         png.version = PNG_IMAGE_VERSION;
 
         if(!png_image_begin_read_from_file(&png, png_path.c_str()))
-            throw std::runtime_error{"Unable to open PNG: " + std::string{png.message}};
+            throw std::runtime_error{"Unable to open PNG (" + png_path + "): " + std::string{png.message}};
 
         png.format = PNG_FORMAT_RGBA;
 
         std::vector<unsigned char> raw_pixel_data(PNG_IMAGE_SIZE(png));
 
         if(!png_image_finish_read(&png, nullptr, std::data(raw_pixel_data), PNG_IMAGE_ROW_STRIDE(png), nullptr))
-            throw std::runtime_error{"Unable to read PNG: " + std::string{png.message}};
+            throw std::runtime_error{"Unable to read PNG (" + png_path + "): " + std::string{png.message}};
 
         width_ = png.width;
         height_ = png.height;
