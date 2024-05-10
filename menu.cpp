@@ -1,7 +1,6 @@
 #include "menu.hpp"
 
 #include <functional>
-#include <iostream> // TODO: delete
 #include <vector>
 
 namespace
@@ -58,8 +57,6 @@ int Menu::run()
                     int w, h;
                     SDL_GetRendererOutputSize(renderer_, &w, &h);
 
-                    std::cout<<"Window resize event: "<<w<<' '<<h<<'\n';
-
                     resize(w, h);
                 }
                 break;
@@ -67,13 +64,11 @@ int Menu::run()
             case SDL_JOYDEVICEADDED:
             {
                 auto joy = SDL::Joystick{ev.jdevice.which};
-                std::cout<<"Joydevice created "<<ev.jdevice.which<<" "<<joy.name()<<"\n";
                 joysticks.emplace(SDL_JoystickGetDeviceInstanceID(ev.jdevice.which), std::move(joy));
                 break;
             }
 
             case SDL_JOYDEVICEREMOVED:
-                std::cout<<"Joydevice removed "<<ev.jdevice.which<<"\n";
                 joysticks.erase(ev.jdevice.which);
                 break;
 
@@ -107,17 +102,12 @@ int Menu::run()
 
             case SDL_JOYBUTTONDOWN: // all joystick buttons launch the selected app
                 if(!joysticks.at(ev.jbutton.which).is_gc())
-                {
-                    std::cout<<"Joybutton: "<<ev.jbutton.which<<' '<<(int)ev.jbutton.button<<' '<<(int)ev.jbutton.state<<'\n';
                     select();
-                }
                 break;
 
             case SDL_CONTROLLERBUTTONDOWN:
                 if(joysticks.at(ev.jbutton.which).is_gc())
                 {
-                    std::cout<<"Controllerbutton: "<<ev.cbutton.which<<' '<<(int)ev.cbutton.button<<' '<<(int)ev.cbutton.state<<'\n';
-
                     switch(ev.cbutton.button)
                     {
                         case SDL_CONTROLLER_BUTTON_A:
@@ -153,7 +143,6 @@ int Menu::run()
             case SDL_JOYHATMOTION:
                 if(!joysticks.at(ev.jhat.which).is_gc())
                 {
-                    std::cout<<"Joyhat: "<<ev.jhat.which<<' '<<(int)ev.jhat.hat<<' '<<(int)ev.jhat.value<<'\n';
                     switch(ev.jhat.value)
                     {
                         case SDL_HAT_LEFT:
@@ -197,7 +186,6 @@ int Menu::run()
             break;
         }
 
-        std::cout.flush();
         SDL_RenderClear(renderer_);
 
         draw();
@@ -207,18 +195,18 @@ int Menu::run()
         SDL_RenderPresent(renderer_);
     }
 
-    return 0; // TODO: return selected
+    return index_;
 }
 
 // TODO: animate scrolling
 void Menu::prev()
 {
-    index_ = index_ == 0 ? std::size(apps_) - 1 : index_ - 1;
+    index_ = index_ == 0 ? static_cast<int>(std::size(apps_)) - 1 : index_ - 1;
 }
 
 void Menu::next()
 {
-    index_ = index_ == std::size(apps_) - 1 ? 0 : index_ + 1;
+    index_ = index_ == static_cast<int>(std::size(apps_)) - 1 ? 0 : index_ + 1;
 }
 
 void Menu::select()
@@ -241,8 +229,6 @@ void Menu::resize(int w, int h)
         const auto image_size_px = row_height_px;
 
         const auto text_wrap_px = w_ - (2 * horiz_margin_px + image_size_px + col_spacing_px);
-
-        std::cout<<"Font sizes: "<<font_size<<" "<<font_size/2<<'\n';
 
         auto title_font = SDL::Font{"sans-serif", font_size};
         auto desc_font = SDL::Font{"sans-serif", font_size / 2};
@@ -277,7 +263,7 @@ void Menu::draw_row(int pos)
     const auto row_top_px = h_ / 2 + pos * (row_height_px + row_spacing_px) - row_height_px / 2;
     const auto text_x = horiz_margin_px + image_size_px + col_spacing_px;
 
-    auto row_index = static_cast<int>(index_) + pos;
+    auto row_index = index_ + pos;
 
     if(row_index >= static_cast<int>(std::size(apps_)))
         row_index %= std::size(apps_);

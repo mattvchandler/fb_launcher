@@ -15,7 +15,6 @@ class Menu
 public:
     Menu(const std::vector<App> & apps);
     int run();
-    int get_selection() const { return index_; }
     int get_exited() const { return exited_; }
 
 private:

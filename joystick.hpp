@@ -8,8 +8,6 @@
 
 namespace SDL
 {
-    // TODO: probably will need a way to expose which type it is and get the appropriate internal object
-    // We can always get an SDL_Joystick from an SDL_GameController, so maybe the interface should reflect that
     class Joystick
     {
     private:
