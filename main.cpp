@@ -23,7 +23,7 @@ int main(int argc, char * argv[])
     while(true)
     {
         // TODO: capture / log output
-        std::system(apps[selection_index].command.c_str());
+        // std::system(apps[selection_index].command.c_str());
 
         auto menu = Menu{apps};
         // TODO: excpetion handling (what should we even do? most of these ought to be fatal)

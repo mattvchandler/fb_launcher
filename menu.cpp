@@ -1,17 +1,38 @@
 #include "menu.hpp"
 
+#include <chrono>
 #include <functional>
+#include <thread>
 #include <vector>
 
 namespace
 {
-    // units are percentages
-    constexpr auto row_height = 20;
-    constexpr auto horiz_margin = 10;
-    constexpr auto row_spacing = 10;
-    constexpr auto col_spacing = 5;
+    struct Layout
+    {
+        // units are percentages
+        static constexpr int row_height = 20;
+        static constexpr int horiz_margin = 10;
+        static constexpr int row_spacing = 10;
+        static constexpr int col_spacing = 5;
+
+        int screen_width {0};
+        int screen_height {0};
+        Layout(int w, int h): screen_width{w}, screen_height{h} {}
+
+        int row_height_px() { return row_height * screen_height / 100; }
+        int horiz_margin_px() { return horiz_margin * screen_width / 100; }
+        int row_spacing_px() { return row_spacing * screen_height / 100; }
+        int col_spacing_px() { return col_spacing * screen_width / 100; }
+        int image_size_px() { return row_height_px(); }
+        int text_wrap_px() { return  screen_width - (2 * horiz_margin_px() + image_size_px() + col_spacing_px()); }
+        int text_x_px() { return horiz_margin_px() + image_size_px() + col_spacing_px(); }
+    };
 
     constexpr auto text_color = SDL_Color {0xFF, 0xFF, 0xFF, 0xFF};
+
+    constexpr auto animation_duration = std::chrono::milliseconds{200};
+
+    constexpr auto framerate = 60.0f;
 }
 
 Menu::Menu(const std::vector<App> & apps):
@@ -32,14 +53,22 @@ Menu::Menu(const std::vector<App> & apps):
             .thumbnail = a.thumbnail_path.empty() ? SDL::Texture{} : SDL::Texture{renderer_, a.thumbnail_path},
             .bg        = a.bg_path.empty()        ? SDL::Texture{} : SDL::Texture{renderer_, a.bg_path}});
     }
+
+    animation_event_ = SDL_RegisterEvents(1);
+    if(animation_event_ == (Uint32)-1)
+        SDL::sdl_error("Could not register custom event");
 }
 
 int Menu::run()
 {
     exited_ = false;
     running_ = true;
+
+
     while(running_)
     {
+        auto frame_start = std::chrono::system_clock::now();
+
         SDL_Event ev;
         if(SDL_WaitEvent(&ev) < 0) // might need to change this to SDL_WaitEventTimeout so CEC inputs can come through - experiment to see if that's the case
             SDL::sdl_error("Error getting SDL event");
@@ -193,20 +222,41 @@ int Menu::run()
         // SDL_RenderCopy(renderer_, tex, nullptr, nullptr);
 
         SDL_RenderPresent(renderer_);
+
+        if(animation_direction_ != 0)
+        {
+            SDL_Event ev;
+            SDL_zero(ev);
+            ev.type = animation_event_;
+            SDL_PushEvent(&ev);
+        }
+
+        auto now = std::chrono::system_clock::now();
+        auto frame_time = now - frame_start;
+        std::this_thread::sleep_for(std::chrono::duration<float>(1.0f / framerate) - frame_time);
     }
 
     return index_;
 }
 
-// TODO: animate scrolling
 void Menu::prev()
 {
-    index_ = index_ == 0 ? static_cast<int>(std::size(apps_)) - 1 : index_ - 1;
+    if(animation_direction_ == 0)
+    {
+        index_ = index_ == 0 ? static_cast<int>(std::size(apps_)) - 1 : index_ - 1;
+        animation_start_ = std::chrono::system_clock::now();
+        animation_direction_ = -1;
+    }
 }
 
 void Menu::next()
 {
-    index_ = index_ == static_cast<int>(std::size(apps_)) - 1 ? 0 : index_ + 1;
+    if(animation_direction_ == 0)
+    {
+        index_ = index_ == static_cast<int>(std::size(apps_)) - 1 ? 0 : index_ + 1;
+        animation_start_ = std::chrono::system_clock::now();
+        animation_direction_ = 1;
+    }
 }
 
 void Menu::select()
@@ -222,21 +272,15 @@ void Menu::resize(int w, int h)
 
         const auto font_size = h / 20;
 
-        // TODO: don't repeat
-        const auto row_height_px = row_height * h_ / 100;
-        const auto horiz_margin_px = horiz_margin * w_ / 100;
-        const auto col_spacing_px = col_spacing * w_ / 100;
-        const auto image_size_px = row_height_px;
-
-        const auto text_wrap_px = w_ - (2 * horiz_margin_px + image_size_px + col_spacing_px);
-
         auto title_font = SDL::Font{"sans-serif", font_size};
         auto desc_font = SDL::Font{"sans-serif", font_size / 2};
 
+        auto layout = Layout{w, h};
+
         for(auto i = 0u; i < std::size(apps_); ++i)
         {
-            app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, text_wrap_px);
-            app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, text_wrap_px);
+            app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, layout.text_wrap_px());
+            app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, layout.text_wrap_px());
         }
     }
 }
@@ -250,18 +294,34 @@ void Menu::draw()
     draw_row(-1);
     draw_row(0);
     draw_row(1);
+
+    if(animation_direction_ < 0)
+        draw_row(2);
+    else if(animation_direction_ > 0)
+        draw_row(-2);
 }
 
 void Menu::draw_row(int pos)
 {
-    const auto row_height_px = row_height * h_ / 100;
-    const auto horiz_margin_px = horiz_margin * w_ / 100;
-    const auto row_spacing_px = row_spacing * h_ / 100;
-    const auto col_spacing_px = col_spacing * w_ / 100;
+    auto animation_offset = 0;
+    auto layout = Layout(w_, h_);
 
-    const auto image_size_px = row_height_px;
-    const auto row_top_px = h_ / 2 + pos * (row_height_px + row_spacing_px) - row_height_px / 2;
-    const auto text_x = horiz_margin_px + image_size_px + col_spacing_px;
+    if(animation_direction_ != 0)
+    {
+        auto animation_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - animation_start_);
+        if(animation_time >= animation_duration)
+        {
+            animation_direction_ = 0;
+        }
+        else
+        {
+            auto percentage = static_cast<float>(animation_time.count()) / animation_duration.count();
+            auto start = (layout.row_height_px() + layout.row_spacing_px()) * animation_direction_;
+            animation_offset = static_cast<int>((1.0f - percentage) * start);
+        }
+    }
+
+    const auto row_top_px = h_ / 2 + pos * (layout.row_height_px() + layout.row_spacing_px()) - layout.row_height_px() / 2 + animation_offset;
 
     auto row_index = index_ + pos;
 
@@ -277,7 +337,7 @@ void Menu::draw_row(int pos)
     SDL_SetTextureColorMod(tex.title, fade, fade, fade);
     SDL_SetTextureColorMod(tex.desc, fade, fade, fade);
 
-    tex.thumbnail.render(renderer_, horiz_margin_px, row_top_px, image_size_px, image_size_px);
-    tex.title.render(renderer_, text_x, row_top_px);
-    tex.desc.render(renderer_, text_x, row_top_px + tex.title.get_height());
+    tex.thumbnail.render(renderer_, layout.horiz_margin_px(), row_top_px, layout.image_size_px(), layout.image_size_px());
+    tex.title.render(renderer_, layout.text_x_px(), row_top_px);
+    tex.desc.render(renderer_, layout.text_x_px(), row_top_px + tex.title.get_height());
 }
