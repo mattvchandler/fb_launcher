@@ -10,7 +10,6 @@ struct App
     std::string desc;
     std::string command;
     std::string thumbnail_path;
-    std::string bg_path;
     bool input_cec;
     bool input_keyboard;
     bool input_mouse;

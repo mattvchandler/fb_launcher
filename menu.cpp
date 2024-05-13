@@ -50,8 +50,8 @@ Menu::Menu(const std::vector<App> & apps):
     {
         // Note: text textures are generated in resize()
         app_textures_.emplace_back(Menu_textures{
-            .thumbnail = a.thumbnail_path.empty() ? SDL::Texture{} : SDL::Texture{renderer_, a.thumbnail_path},
-            .bg        = a.bg_path.empty()        ? SDL::Texture{} : SDL::Texture{renderer_, a.bg_path}});
+            .thumbnail = a.thumbnail_path.empty() ? SDL::Texture{} : SDL::Texture{renderer_, a.thumbnail_path}
+        });
     }
 
     animation_event_ = SDL_RegisterEvents(1);
@@ -63,7 +63,6 @@ int Menu::run()
 {
     exited_ = false;
     running_ = true;
-
 
     while(running_)
     {
@@ -216,11 +215,7 @@ int Menu::run()
         }
 
         SDL_RenderClear(renderer_);
-
         draw();
-
-        // SDL_RenderCopy(renderer_, tex, nullptr, nullptr);
-
         SDL_RenderPresent(renderer_);
 
         if(animation_direction_ != 0)
@@ -290,7 +285,6 @@ void Menu::draw()
     if(w_ == 0 || h_ == 0)
         return;
 
-    // TODO: BG image (blended with black?)
     draw_row(-1);
     draw_row(0);
     draw_row(1);
