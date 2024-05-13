@@ -5,8 +5,6 @@
 #include "app.hpp"
 #include "menu.hpp"
 
-// TODO: power-off, reboot options
-
 int main(int argc, char * argv[])
 {
     // TODO: probably going to need more sophisticated argparse
@@ -22,7 +20,6 @@ int main(int argc, char * argv[])
     auto selection_index = 0;
     while(true)
     {
-        // TODO: capture / log output
         // std::system(apps[selection_index].command.c_str());
 
         auto menu = Menu{apps};

@@ -37,6 +37,11 @@ private:
     std::map<int, SDL::Joystick> joysticks;
     Uint32 animation_event_;
 
+    SDL::Texture mouse_icon_ {renderer_, "computer-mouse.png"};
+    SDL::Texture keyboard_icon_ {renderer_, "keyboard.png"};
+    SDL::Texture gamepad_icon_ {renderer_, "gamepad.png"};
+    SDL::Texture cec_icon_ {renderer_, "mobile-retro.png"};
+
     CEC_Input cec_;
 
     struct Menu_textures
@@ -46,8 +51,6 @@ private:
         SDL::Texture thumbnail;
     };
     std::vector<Menu_textures> app_textures_;
-
-    // TODO: icons for inputs
 
     void prev();
     void next();

@@ -24,8 +24,13 @@ namespace
         int row_spacing_px() { return row_spacing * screen_height / 100; }
         int col_spacing_px() { return col_spacing * screen_width / 100; }
         int image_size_px() { return row_height_px(); }
-        int text_wrap_px() { return  screen_width - (2 * horiz_margin_px() + image_size_px() + col_spacing_px()); }
+        int text_wrap_px() { return  screen_width - (2 * horiz_margin_px() + 2 * image_size_px() + 2 * col_spacing_px()); }
         int text_x_px() { return horiz_margin_px() + image_size_px() + col_spacing_px(); }
+        int input_icon_size_px() { return image_size_px() / 2; }
+        int left_input_icon_x_px()  { return screen_width - horiz_margin_px() - input_icon_size_px(); }
+        int right_input_icon_x_px() { return left_input_icon_x_px() + input_icon_size_px(); }
+        int upper_input_icon_y_px() { return 0; }
+        int lower_input_icon_y_px() { return input_icon_size_px(); }
     };
 
     constexpr auto text_color = SDL_Color {0xFF, 0xFF, 0xFF, 0xFF};
@@ -330,8 +335,22 @@ void Menu::draw_row(int pos)
     SDL_SetTextureColorMod(tex.thumbnail, fade, fade, fade);
     SDL_SetTextureColorMod(tex.title, fade, fade, fade);
     SDL_SetTextureColorMod(tex.desc, fade, fade, fade);
+    SDL_SetTextureColorMod(mouse_icon_, fade, fade, fade);
+    SDL_SetTextureColorMod(keyboard_icon_, fade, fade, fade);
+    SDL_SetTextureColorMod(gamepad_icon_, fade, fade, fade);
+    SDL_SetTextureColorMod(cec_icon_, fade, fade, fade);
 
     tex.thumbnail.render(renderer_, layout.horiz_margin_px(), row_top_px, layout.image_size_px(), layout.image_size_px());
     tex.title.render(renderer_, layout.text_x_px(), row_top_px);
     tex.desc.render(renderer_, layout.text_x_px(), row_top_px + tex.title.get_height());
+
+    auto & app = apps_[row_index];
+    if(app.input_mouse)
+        mouse_icon_.render(renderer_, layout.left_input_icon_x_px(), row_top_px + layout.upper_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
+    if(app.input_keyboard)
+        keyboard_icon_.render(renderer_, layout.right_input_icon_x_px(), row_top_px + layout.upper_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
+    if(app.input_gamepad)
+        gamepad_icon_.render(renderer_, layout.left_input_icon_x_px(), row_top_px + layout.lower_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
+    if(app.input_cec)
+        cec_icon_.render(renderer_, layout.right_input_icon_x_px(), row_top_px + layout.lower_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
 }
