@@ -80,27 +80,27 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    // load / parse config file
-    auto apps = read_app_list(argv[1]);
-
-    while(true)
-    {
-        if(selection_index >= 0 && selection_index < static_cast<int>(std::size(apps)))
-            std::system(apps[selection_index].command.c_str());
-
-        auto menu = Menu{apps};
-
         try
         {
+        // load / parse config file
+        auto apps = read_app_list(argv[1]);
+
+        while(true)
+        {
+            if(selection_index >= 0 && selection_index < static_cast<int>(std::size(apps)))
+                std::system(apps[selection_index].command.c_str());
+
+            auto menu = Menu{apps};
+
             selection_index = menu.run();
 
             if(menu.get_exited())
                 break;
         }
-        catch(const std::runtime_error & e)
-        {
-            std::cerr<<e.what();
-            return 1;
-        }
+    }
+    catch(const std::runtime_error & e)
+    {
+        std::cerr<<e.what();
+        return 1;
     }
 }
