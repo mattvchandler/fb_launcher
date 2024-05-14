@@ -16,20 +16,15 @@ private:
 
     static void keypress(void * cbparam, const CEC::cec_keypress * key);
 
-    std::map<CEC::cec_user_control_code, std::function<void()>> callback_directory_;
+    std::function<void(CEC::cec_user_control_code)> callback_ = [](CEC::cec_user_control_code){};
 
 public:
     CEC_Input();
     ~CEC_Input();
 
-    void register_by_code(CEC::cec_user_control_code code, std::function<void()> f) { callback_directory_[code] = std::move(f); }
+    void register_callback(std::function<void(CEC::cec_user_control_code)> f) { callback_ = std::move(f); }
 
-    void register_up(std::function<void()> f) { register_by_code(CEC::CEC_USER_CONTROL_CODE_UP, f); }
-    void register_down(std::function<void()> f) { register_by_code(CEC::CEC_USER_CONTROL_CODE_DOWN, f); }
-    void register_left(std::function<void()> f) { register_by_code(CEC::CEC_USER_CONTROL_CODE_LEFT, f); }
-    void register_right(std::function<void()> f) { register_by_code(CEC::CEC_USER_CONTROL_CODE_RIGHT, f); }
-    void register_select(std::function<void()> f) { register_by_code(CEC::CEC_USER_CONTROL_CODE_SELECT, f); }
-    void register_EXIT(std::function<void()> f) { register_by_code(CEC::CEC_USER_CONTROL_CODE_EXIT, f); }
+    void power_tv_on();
 
     operator bool() const { return adapter_; }
     operator CEC::ICECAdapter* () { return adapter_; }

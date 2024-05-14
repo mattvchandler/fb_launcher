@@ -38,6 +38,9 @@ namespace
     constexpr auto animation_duration = std::chrono::milliseconds{200};
 
     constexpr auto framerate = 60.0f;
+
+    constexpr auto animation_event = SDL_USEREVENT;
+    constexpr auto cec_event       = SDL_USEREVENT + 1;
 }
 
 Menu::Menu(const std::vector<App> & apps):
@@ -45,11 +48,7 @@ Menu::Menu(const std::vector<App> & apps):
 {
     SDL_ShowCursor(SDL_DISABLE);
 
-    cec_.register_up(std::bind(&Menu::prev, this));
-    cec_.register_left(std::bind(&Menu::prev, this));
-    cec_.register_down(std::bind(&Menu::next, this));
-    cec_.register_right(std::bind(&Menu::next, this));
-    cec_.register_select(std::bind(&Menu::select, this));
+    cec_.register_callback(std::bind(&Menu::queue_cec_event, this, std::placeholders::_1));
 
     for(auto && a: apps_)
     {
@@ -59,8 +58,11 @@ Menu::Menu(const std::vector<App> & apps):
         });
     }
 
-    animation_event_ = SDL_RegisterEvents(1);
-    if(animation_event_ == (Uint32)-1)
+    // TODO: failing on 2nd run
+    if(SDL_RegisterEvents(1) != animation_event)
+        SDL::sdl_error("Could not register custom event");
+
+    if(SDL_RegisterEvents(1) != cec_event)
         SDL::sdl_error("Could not register custom event");
 }
 
@@ -69,12 +71,15 @@ int Menu::run()
     exited_ = false;
     running_ = true;
 
+    // have CEC wake the TV
+    cec_.power_tv_on();
+
     while(running_)
     {
         auto frame_start = std::chrono::system_clock::now();
 
         SDL_Event ev;
-        if(SDL_WaitEvent(&ev) < 0) // might need to change this to SDL_WaitEventTimeout so CEC inputs can come through - experiment to see if that's the case
+        if(SDL_WaitEvent(&ev) < 0)
             SDL::sdl_error("Error getting SDL event");
 
         switch(ev.type)
@@ -215,8 +220,33 @@ int Menu::run()
                 break;
             }
 
+            case cec_event:
+                switch(ev.user.code)
+                {
+                    using namespace CEC;
+
+                    case CEC_USER_CONTROL_CODE_UP:
+                    case CEC_USER_CONTROL_CODE_LEFT:
+                        prev();
+                        break;
+
+                    case CEC_USER_CONTROL_CODE_DOWN:
+                    case CEC_USER_CONTROL_CODE_RIGHT:
+                        next();
+                        break;
+
+                    case CEC_USER_CONTROL_CODE_SELECT:
+                        select();
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+
             default:
-            break;
+                break;
         }
 
         SDL_RenderClear(renderer_);
@@ -227,7 +257,7 @@ int Menu::run()
         {
             SDL_Event ev;
             SDL_zero(ev);
-            ev.type = animation_event_;
+            ev.type = animation_event;
             SDL_PushEvent(&ev);
         }
 
@@ -262,6 +292,16 @@ void Menu::next()
 void Menu::select()
 {
     running_ = false;
+}
+
+// Note - this is not going to be called from the main thread
+void Menu::queue_cec_event(CEC::cec_user_control_code code)
+{
+    SDL_Event ev;
+    SDL_zero(ev);
+    ev.type = cec_event;
+    ev.user.code = code;
+    SDL_PushEvent(&ev);
 }
 
 void Menu::resize(int w, int h)

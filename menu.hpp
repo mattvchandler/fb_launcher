@@ -35,7 +35,6 @@ private:
     SDL::Window window_{"fb_launcher"};
     SDL::Renderer renderer_{window_};
     std::map<int, SDL::Joystick> joysticks;
-    Uint32 animation_event_;
 
     SDL::Texture mouse_icon_ {renderer_, "input_icons/computer-mouse.svg", 32, 32, 0xFF, 0xFF, 0xFF};
     SDL::Texture keyboard_icon_ {renderer_, "input_icons/keyboard.svg", 32, 32, 0xFF, 0xFF, 0xFF};
@@ -55,6 +54,8 @@ private:
     void prev();
     void next();
     void select();
+
+    void queue_cec_event(CEC::cec_user_control_code code);
 
     void resize(int w, int h);
 

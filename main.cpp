@@ -80,9 +80,8 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-        try
-        {
-        // load / parse config file
+    try
+    {
         auto apps = read_app_list(argv[1]);
 
         while(true)
