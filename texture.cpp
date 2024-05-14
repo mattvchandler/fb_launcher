@@ -160,24 +160,23 @@ namespace SDL
     Texture::Texture(Renderer & renderer, const std::string & img_path,
             int suggested_width, int suggested_height,
             int override_r, int override_g, int override_b):
-        path_(img_path),
+        path_{img_path},
         override_r_{override_r},
         override_g_{override_g},
         override_b_{override_b}
     {
         auto raw_pixel_data = std::vector<unsigned char>{};
 
-        if(img_path.ends_with(".png"))
+        if(path_.ends_with(".png"))
         {
-            std::tie(raw_pixel_data, width_, height_) = read_png(img_path);
+            std::tie(raw_pixel_data, width_, height_) = read_png(path_);
         }
-        else if(img_path.ends_with(".svg"))
+        else if(path_.ends_with(".svg"))
         {
-            std::tie(raw_pixel_data, width_, height_) = read_svg(img_path, suggested_width, suggested_height, override_r_, override_g_, override_b_);
-            rescalable_ = true;
+            std::tie(raw_pixel_data, width_, height_) = read_svg(path_, suggested_width, suggested_height, override_r_, override_g_, override_b_);
         }
         else
-            sdl_error("Unsupported image type: " + img_path);
+            sdl_error("Unsupported image type: " + path_);
 
         texture_ = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width_, height_);
         if(!texture_)
@@ -185,24 +184,27 @@ namespace SDL
 
         if(SDL_UpdateTexture(texture_, nullptr, std::data(raw_pixel_data), 4 * width_) < 0)
             sdl_error("Unable to load SDL texture");
-    }
 
+        SDL_SetTextureBlendMode(texture_, SDL_BLENDMODE_BLEND);
+    }
 
     void Texture::render(Renderer & renderer, int x, int y, int size_w, int size_h)
     {
         if(!texture_)
             return;
 
-        render_dest_.x = x;
-        render_dest_.y = y;
-        render_dest_.w = size_w ? size_w : width_;
-        render_dest_.h = size_h ? size_h : height_;
-        SDL_RenderCopy(renderer, texture_, nullptr, &render_dest_);
+        SDL_Rect render_dest;
+
+        render_dest.x = x;
+        render_dest.y = y;
+        render_dest.w = size_w ? size_w : width_;
+        render_dest.h = size_h ? size_h : height_;
+        SDL_RenderCopy(renderer, texture_, nullptr, &render_dest);
     }
 
     void Texture::rescale(Renderer & renderer, int width, int height)
     {
-        if(!rescalable_)
+        if(!texture_ || !path_.ends_with(".svg"))
             return;
 
         *this = Texture{renderer, path_, width, height, override_r_, override_g_, override_b_};

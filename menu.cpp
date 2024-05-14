@@ -280,14 +280,14 @@ void Menu::resize(int w, int h)
         {
             app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, layout.text_wrap_px());
             app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, layout.text_wrap_px());
-            app_textures_[i].thumbnail.rescale(renderer_, w_, h_);
+            app_textures_[i].thumbnail.rescale(renderer_, layout.image_size_px(), layout.image_size_px());
         }
-    }
 
-    mouse_icon_.rescale(renderer_, w_, h_);
-    keyboard_icon_.rescale(renderer_, w_, h_);
-    gamepad_icon_.rescale(renderer_, w_, h_);
-    cec_icon_.rescale(renderer_, w_, h_);
+        mouse_icon_.rescale(renderer_, layout.input_icon_size_px(), layout.input_icon_size_px());
+        keyboard_icon_.rescale(renderer_, layout.input_icon_size_px(), layout.input_icon_size_px());
+        gamepad_icon_.rescale(renderer_, layout.input_icon_size_px(), layout.input_icon_size_px());
+        cec_icon_.rescale(renderer_, layout.input_icon_size_px(), layout.input_icon_size_px());
+    }
 }
 
 void Menu::draw()

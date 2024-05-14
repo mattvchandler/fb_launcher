@@ -12,9 +12,6 @@ namespace SDL
         int width_ {0};
         int height_ {0};
 
-        SDL_Rect render_dest_;
-
-        int rescalable_ {false};
         std::string path_;
         int override_r_ {-1};
         int override_g_ {-1};
@@ -49,12 +46,16 @@ namespace SDL
         Texture(const Texture &) = delete;
         Texture &operator=(const Texture &) = delete;
 
-        Texture(Texture && t)
+        Texture(Texture && t):
+            texture_{t.texture_},
+            width_{std::move(t.width_)},
+            height_{std::move(t.height_)},
+            path_{std::move(t.path_)},
+            override_r_{std::move(t.override_r_)},
+            override_g_{std::move(t.override_g_)},
+            override_b_{std::move(t.override_b_)}
         {
-            texture_ = t.texture_;
             t.texture_ = nullptr;
-            width_ = t.width_;
-            height_ = t.height_;
         }
         Texture &operator=(Texture && t)
         {
@@ -62,8 +63,12 @@ namespace SDL
             {
                 texture_ = t.texture_;
                 t.texture_ = nullptr;
-                width_ = t.width_;
-                height_ = t.height_;
+                width_ = std::move(t.width_);
+                height_ = std::move(t.height_);
+                path_ = std::move(t.path_);
+                override_r_ = std::move(t.override_r_);
+                override_g_ = std::move(t.override_g_);
+                override_b_ = std::move(t.override_b_);
             }
             return *this;
         }
