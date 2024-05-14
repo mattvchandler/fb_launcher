@@ -27,7 +27,7 @@ namespace SDL
                 sdl_error("Unable to create SDL texture");
         }
         Texture(Renderer & renderer, const std::string & img_path,
-                int suggested_width = 0, int suggested_height = 0,
+                int viewport_width = 0, int viewport_height = 0,
                 int override_r = -1, int override_g = -1, int override_b = -1);
 
         Texture(Renderer & renderer, Surface & surface):
