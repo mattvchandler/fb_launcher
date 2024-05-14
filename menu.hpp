@@ -37,10 +37,10 @@ private:
     std::map<int, SDL::Joystick> joysticks;
     Uint32 animation_event_;
 
-    SDL::Texture mouse_icon_ {renderer_, "computer-mouse.svg", 32, 32, 0xFF, 0xFF, 0xFF};
-    SDL::Texture keyboard_icon_ {renderer_, "keyboard.svg", 32, 32, 0xFF, 0xFF, 0xFF};
-    SDL::Texture gamepad_icon_ {renderer_, "gamepad.svg", 32, 32, 0xFF, 0xFF, 0xFF};
-    SDL::Texture cec_icon_ {renderer_, "mobile-retro.svg", 32, 32, 0xFF, 0xFF, 0xFF};
+    SDL::Texture mouse_icon_ {renderer_, "input_icons/computer-mouse.svg", 32, 32, 0xFF, 0xFF, 0xFF};
+    SDL::Texture keyboard_icon_ {renderer_, "input_icons/keyboard.svg", 32, 32, 0xFF, 0xFF, 0xFF};
+    SDL::Texture gamepad_icon_ {renderer_, "input_icons/gamepad.svg", 32, 32, 0xFF, 0xFF, 0xFF};
+    SDL::Texture cec_icon_ {renderer_, "input_icons/mobile-retro.svg", 32, 32, 0xFF, 0xFF, 0xFF};
 
     CEC_Input cec_;
 
