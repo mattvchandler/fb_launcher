@@ -270,19 +270,24 @@ void Menu::resize(int w, int h)
     {
         w_ = w; h_ = h;
 
-        const auto font_size = h / 20;
+        const auto font_size = h_ / 20;
 
         auto title_font = SDL::Font{"sans-serif", font_size};
         auto desc_font = SDL::Font{"sans-serif", font_size / 2};
 
-        auto layout = Layout{w, h};
-
+        auto layout = Layout{w_, h_};
         for(auto i = 0u; i < std::size(apps_); ++i)
         {
             app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, layout.text_wrap_px());
             app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, layout.text_wrap_px());
+            app_textures_[i].thumbnail.rescale(renderer_, w_, h_);
         }
     }
+
+    mouse_icon_.rescale(renderer_, w_, h_);
+    keyboard_icon_.rescale(renderer_, w_, h_);
+    gamepad_icon_.rescale(renderer_, w_, h_);
+    cec_icon_.rescale(renderer_, w_, h_);
 }
 
 void Menu::draw()

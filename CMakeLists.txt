@@ -22,7 +22,9 @@ find_package(SDL2_ttf REQUIRED)
 find_package(PNG REQUIRED)
 find_package(Fontconfig REQUIRED)
 find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(CEC libcec REQUIRED)
+pkg_check_modules(SVG librsvg-2.0 REQUIRED)
 
 add_subdirectory(csvpp)
 
@@ -36,7 +38,8 @@ add_executable(${PROJECT_NAME}
     texture.cpp)
 
 target_include_directories(${PROJECT_NAME}
-    PRIVATE ${CEC_INCLUDE_DIRS})
+    PRIVATE ${CEC_INCLUDE_DIRS}
+    PRIVATE ${SVG_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME}
     SDL2::Main
@@ -44,4 +47,5 @@ target_link_libraries(${PROJECT_NAME}
     PNG::PNG
     Fontconfig::Fontconfig
     csvpp::csvpp
-    ${CEC_LIBRARIES})
+    ${CEC_LIBRARIES}
+    ${SVG_LIBRARIES})

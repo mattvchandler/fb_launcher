@@ -14,6 +14,12 @@ namespace SDL
 
         SDL_Rect render_dest_;
 
+        int rescalable_ {false};
+        std::string path_;
+        int override_r_ {-1};
+        int override_g_ {-1};
+        int override_b_ {-1};
+
     public:
         Texture() = default;
         Texture(Renderer & renderer, int width, int height):
@@ -23,7 +29,9 @@ namespace SDL
             if(!texture_)
                 sdl_error("Unable to create SDL texture");
         }
-        Texture(Renderer & renderer, const std::string & png_path);
+        Texture(Renderer & renderer, const std::string & img_path,
+                int suggested_width = 0, int suggested_height = 0,
+                int override_r = -1, int override_g = -1, int override_b = -1);
 
         Texture(Renderer & renderer, Surface & surface):
             texture_{SDL_CreateTextureFromSurface(renderer, surface)},
@@ -75,6 +83,8 @@ namespace SDL
 
         int get_width() const { return width_; }
         int get_height() const { return height_; }
+
+        void rescale(Renderer & renderer, int width, int height);
     };
 }
 #endif // TEXTURE_HPP
