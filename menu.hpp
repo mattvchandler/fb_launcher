@@ -36,10 +36,10 @@ private:
     SDL::Renderer renderer_{window_};
     std::map<int, SDL::Joystick> joysticks;
 
-    SDL::Texture mouse_icon_ {renderer_, "input_icons/computer-mouse.svg", 32, 32, 0xFF, 0xFF, 0xFF};
-    SDL::Texture keyboard_icon_ {renderer_, "input_icons/keyboard.svg", 32, 32, 0xFF, 0xFF, 0xFF};
-    SDL::Texture gamepad_icon_ {renderer_, "input_icons/gamepad.svg", 32, 32, 0xFF, 0xFF, 0xFF};
-    SDL::Texture cec_icon_ {renderer_, "input_icons/mobile-retro.svg", 32, 32, 0xFF, 0xFF, 0xFF};
+    SDL::Texture mouse_icon_ {};
+    SDL::Texture keyboard_icon_ {};
+    SDL::Texture gamepad_icon_ {};
+    SDL::Texture cec_icon_ {};
 
     CEC_Input cec_;
 

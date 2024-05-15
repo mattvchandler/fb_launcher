@@ -1,6 +1,9 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
+#include <span>
+#include <variant>
+
 #include "sdl.hpp"
 
 namespace SDL
@@ -12,10 +15,11 @@ namespace SDL
         int width_ {0};
         int height_ {0};
 
-        std::string path_;
+        std::variant<std::string, std::span<char>> stored_image_;
         int override_r_ {-1};
         int override_g_ {-1};
         int override_b_ {-1};
+        bool rescalable_ {false};
 
     public:
         Texture() = default;
@@ -27,6 +31,10 @@ namespace SDL
                 sdl_error("Unable to create SDL texture");
         }
         Texture(Renderer & renderer, const std::string & img_path,
+                int viewport_width = 0, int viewport_height = 0,
+                int override_r = -1, int override_g = -1, int override_b = -1);
+
+        Texture(Renderer & renderer, const std::span<char> & img_data,
                 int viewport_width = 0, int viewport_height = 0,
                 int override_r = -1, int override_g = -1, int override_b = -1);
 
@@ -50,10 +58,11 @@ namespace SDL
             texture_{t.texture_},
             width_{std::move(t.width_)},
             height_{std::move(t.height_)},
-            path_{std::move(t.path_)},
+            stored_image_{std::move(t.stored_image_)},
             override_r_{std::move(t.override_r_)},
             override_g_{std::move(t.override_g_)},
-            override_b_{std::move(t.override_b_)}
+            override_b_{std::move(t.override_b_)},
+            rescalable_{std::move(t.rescalable_)}
         {
             t.texture_ = nullptr;
         }
@@ -65,10 +74,11 @@ namespace SDL
                 t.texture_ = nullptr;
                 width_ = std::move(t.width_);
                 height_ = std::move(t.height_);
-                path_ = std::move(t.path_);
+                stored_image_ = std::move(t.stored_image_);
                 override_r_ = std::move(t.override_r_);
                 override_g_ = std::move(t.override_g_);
                 override_b_ = std::move(t.override_b_);
+                rescalable_ = std::move(t.rescalable_);
             }
             return *this;
         }

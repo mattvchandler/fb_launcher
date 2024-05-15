@@ -1,7 +1,13 @@
 #include "texture.hpp"
+#include "sdl.hpp"
 
-#include <vector>
+#include <array>
+#include <fstream>
+#include <stdexcept>
 #include <tuple>
+#include <variant>
+#include <vector>
+
 #include <cstring>
 
 #include <png.h>
@@ -9,26 +15,49 @@
 
 namespace
 {
-struct RAII_stack
-{
-    ~RAII_stack()
+    struct RAII_stack
     {
-        for(auto i = std::rbegin(objs); i != std::rend(objs); ++i)
+        ~RAII_stack()
         {
-            auto [d, free_fun] = *i;
-            free_fun(d);
+            for(auto i = std::rbegin(objs); i != std::rend(objs); ++i)
+            {
+                auto [d, free_fun] = *i;
+                free_fun(d);
+            }
         }
-    }
-    template <typename T, typename U>
-    void push(T * d, void (*free_fun)(U*))
+        template <typename T, typename U>
+        void push(T * d, void (*free_fun)(U*))
+        {
+            objs.emplace_back(reinterpret_cast<void*>(d), reinterpret_cast<void (*)(void*)>(free_fun));
+        }
+
+        std::vector<std::pair<void *, void (*)(void*)>> objs;
+    };
+
+    std::vector<char> read_to_vector(const std::string & path)
     {
-        objs.emplace_back(reinterpret_cast<void*>(d), reinterpret_cast<void (*)(void*)>(free_fun));
+        std::vector<char> data;
+        std::array<char, 4096> buffer;
+
+        auto input = std::ifstream{path, std::ios::binary};
+        while(input)
+        {
+            input.read(std::data(buffer), std::size(buffer));
+            if(input.bad())
+                throw std::runtime_error {"Error reading input file: " + path};
+
+            data.insert(std::end(data), std::begin(buffer), std::begin(buffer) + input.gcount());
+        }
+
+        return data;
     }
 
-    std::vector<std::pair<void *, void (*)(void*)>> objs;
-};
+    struct not_svg_error: public std::runtime_error
+    {
+        not_svg_error(const std::string & what): std::runtime_error(what) {}
+    };
 
-    std::tuple<std::vector<unsigned char>, int, int> read_png(const std::string & png_path,
+    std::tuple<std::vector<unsigned char>, int, int> read_png(const std::span<char> & png_mem,
             int viewport_width, int viewport_height)
     {
         RAII_stack rs;
@@ -38,9 +67,9 @@ struct RAII_stack
         std::memset(&png, 0, sizeof(png));
         png.version = PNG_IMAGE_VERSION;
 
-        if(!png_image_begin_read_from_file(&png, png_path.c_str()))
+        if(!png_image_begin_read_from_memory(&png, std::data(png_mem), std::size(png_mem)))
         {
-            throw std::runtime_error{"Unable to open PNG (" + png_path + "): " + std::string{png.message}};
+            throw std::runtime_error{"Unable to open PNG: " + std::string{png.message}};
         }
 
         png.format = PNG_FORMAT_RGBA;
@@ -49,7 +78,7 @@ struct RAII_stack
 
         if(!png_image_finish_read(&png, nullptr, std::data(raw_pixel_data), PNG_IMAGE_ROW_STRIDE(png), nullptr))
         {
-            throw std::runtime_error{"Unable to read PNG (" + png_path + "): " + std::string{png.message}};
+            throw std::runtime_error{"Unable to read PNG: " + std::string{png.message}};
         }
 
         int x_offset = 0, y_offset = 0;
@@ -86,21 +115,24 @@ struct RAII_stack
         return {letterboxed_pixel_data, viewport_width, viewport_height};
     }
 
-    std::tuple<std::vector<unsigned char>, int, int> read_svg(const std::string & svg_path,
+    std::tuple<std::vector<unsigned char>, int, int> read_svg(const std::span<char> & svg_data,
             int viewport_width, int viewport_height,
             int override_r, int override_g, int override_b)
     {
         RAII_stack rs;
 
-        GFile * file = g_file_new_for_path(svg_path.c_str());
+        GFile * file = g_file_new_for_path(".");
         rs.push(file, g_object_unref);
 
+        GInputStream * is = g_memory_input_stream_new_from_data(std::data(svg_data), std::size(svg_data), nullptr);
+        rs.push(is, g_object_unref);
+
         GError * err {nullptr};
-        RsvgHandle * handle = rsvg_handle_new_from_gfile_sync(file, RSVG_HANDLE_FLAGS_NONE, nullptr, &err);
+        RsvgHandle * handle = rsvg_handle_new_from_stream_sync(is, file, RSVG_HANDLE_FLAGS_NONE, nullptr, &err);
         if(!handle)
         {
             rs.push(err, g_error_free);
-            throw std::runtime_error{"Unable to open SVG (" + svg_path + "): " + std::string{err->message}};
+            throw not_svg_error{std::string{err->message}};
         }
         rs.push(handle, g_object_unref);
         rsvg_handle_set_dpi(handle, 96.0);
@@ -191,6 +223,50 @@ struct RAII_stack
 
         return {letterboxed_pixel_data, pixel_width, pixel_height};
     }
+
+    std::tuple<std::vector<unsigned char>, int, int, bool> load_image_from_span(const std::span<char> & image_data,
+            int viewport_height, int viewport_width,
+            int override_r, int override_g, int override_b)
+    {
+        const std::array<unsigned char, 8> png_header = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+        auto is_png = std::equal(std::begin(png_header), std::end(png_header), std::begin(image_data), [](unsigned char a, char b) { return a == static_cast<unsigned char>(b); });
+
+        if(is_png)
+        {
+            auto && [data, width, height] = read_png(image_data, viewport_width, viewport_height);
+            return {data, width, height, false};
+        }
+        else
+        {
+            try
+            {
+                auto && [data, width, height] = read_svg(image_data, viewport_width, viewport_height, override_r, override_g, override_b);
+                return {data, width, height, true};
+            }
+            catch(const not_svg_error & e)
+            {
+                throw std::runtime_error {"Image type not supported"};
+            }
+        }
+    }
+
+    SDL_Texture * load_texture_from_data(SDL::Renderer & renderer, const unsigned char * raw_pixel_data, int width, int height)
+    {
+        auto texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width, height);
+        if(!texture)
+            SDL::sdl_error("Unable to create SDL texture");
+
+        if(SDL_UpdateTexture(texture, nullptr, raw_pixel_data, 4 * width) < 0)
+        {
+            SDL_DestroyTexture(texture);
+            SDL::sdl_error("Unable to load SDL texture");
+        }
+
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureScaleMode(texture, SDL_ScaleModeBest);
+
+        return texture;
+    }
 }
 
 namespace SDL
@@ -198,31 +274,28 @@ namespace SDL
     Texture::Texture(Renderer & renderer, const std::string & img_path,
             int viewport_width, int viewport_height,
             int override_r, int override_g, int override_b):
-        path_{img_path},
+        stored_image_{img_path},
         override_r_{override_r},
         override_g_{override_g},
         override_b_{override_b}
     {
-        auto raw_pixel_data = std::vector<unsigned char>{};
+        auto file_data = read_to_vector(img_path);
+        auto image_data = load_image_from_span(std::span{std::data(file_data), std::size(file_data)}, viewport_width, viewport_height, override_r_, override_b_, override_b_);
+        std::tie(std::ignore, width_, height_, rescalable_) = image_data;
+        texture_ = load_texture_from_data(renderer, std::data(std::get<0>(image_data)), width_, height_);
+    }
 
-        if(path_.ends_with(".png"))
-            std::tie(raw_pixel_data, width_, height_) = read_png(path_, viewport_width, viewport_height);
-
-        else if(path_.ends_with(".svg"))
-            std::tie(raw_pixel_data, width_, height_) = read_svg(path_, viewport_width, viewport_height, override_r_, override_g_, override_b_);
-
-        else
-            sdl_error("Unsupported image type: " + path_);
-
-        texture_ = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width_, height_);
-        if(!texture_)
-            sdl_error("Unable to create SDL texture");
-
-        if(SDL_UpdateTexture(texture_, nullptr, std::data(raw_pixel_data), 4 * width_) < 0)
-            sdl_error("Unable to load SDL texture");
-
-        SDL_SetTextureBlendMode(texture_, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureScaleMode(texture_, SDL_ScaleModeBest);
+    Texture::Texture(Renderer & renderer, const std::span<char> & img_data,
+            int viewport_width, int viewport_height,
+            int override_r, int override_g, int override_b):
+        stored_image_{img_data},
+        override_r_{override_r},
+        override_g_{override_g},
+        override_b_{override_b}
+    {
+        auto image_data = load_image_from_span(img_data, viewport_width, viewport_height, override_r_, override_b_, override_b_);
+        std::tie(std::ignore, width_, height_, rescalable_) = image_data;
+        texture_ = load_texture_from_data(renderer, std::data(std::get<0>(image_data)), width_, height_);
     }
 
     void Texture::render(Renderer & renderer, int x, int y, int size_w, int size_h)
@@ -241,9 +314,12 @@ namespace SDL
 
     void Texture::rescale(Renderer & renderer, int width, int height)
     {
-        if(!texture_ || !path_.ends_with(".svg"))
+        if(!texture_ || !rescalable_)
             return;
 
-        *this = Texture{renderer, path_, width, height, override_r_, override_g_, override_b_};
+        if(auto filename = std::get_if<std::string>(&stored_image_); filename)
+            *this = Texture{renderer, *filename, width, height, override_r_, override_g_, override_b_};
+        else
+            *this = Texture{renderer, std::get<std::span<char>>(stored_image_), width, height, override_r_, override_g_, override_b_};
     }
 }

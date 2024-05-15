@@ -35,11 +35,13 @@ add_executable(${PROJECT_NAME}
     font.cpp
     joystick.cpp
     menu.cpp
-    texture.cpp)
+    texture.cpp
+)
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE ${CEC_INCLUDE_DIRS}
-    PRIVATE ${SVG_INCLUDE_DIRS})
+    PRIVATE ${SVG_INCLUDE_DIRS}
+)
 
 target_link_libraries(${PROJECT_NAME}
     SDL2::Main
@@ -48,4 +50,31 @@ target_link_libraries(${PROJECT_NAME}
     Fontconfig::Fontconfig
     csvpp::csvpp
     ${CEC_LIBRARIES}
-    ${SVG_LIBRARIES})
+    ${SVG_LIBRARIES}
+)
+
+function(embed_and_link_files EXECUTABLE_NAME SOURCE_FILES)
+    foreach(FILE ${SOURCE_FILES})
+        get_filename_component(FILE_NAME ${FILE} NAME)
+        get_filename_component(FILE_DIR ${FILE} DIRECTORY)
+        set(OUTPUT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}.o")
+
+        add_custom_command(
+            OUTPUT ${OUTPUT_OBJECT}
+            COMMAND ld -b binary -r -z noexecstack "${FILE_NAME}" -o "${OUTPUT_OBJECT}"
+            DEPENDS ${FILE}
+            WORKING_DIRECTORY "${FILE_DIR}"
+            COMMENT "Embedding ${FILE_NAME}"
+        )
+
+        target_sources(${EXECUTABLE_NAME} PRIVATE ${OUTPUT_OBJECT})
+    endforeach()
+endfunction()
+
+set(EMBEDDED_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/input_icons/computer-mouse.svg"
+    "${CMAKE_CURRENT_SOURCE_DIR}/input_icons/keyboard.svg"
+    "${CMAKE_CURRENT_SOURCE_DIR}/input_icons/gamepad.svg"
+    "${CMAKE_CURRENT_SOURCE_DIR}/input_icons/mobile-retro.svg"
+)
+embed_and_link_files(${PROJECT_NAME} "${EMBEDDED_FILES}")

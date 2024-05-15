@@ -41,10 +41,24 @@ namespace
 
     constexpr auto animation_event = SDL_USEREVENT;
     constexpr auto cec_event       = SDL_USEREVENT + 1;
+
 }
 
+extern char _binary_computer_mouse_svg_end[];
+extern char _binary_computer_mouse_svg_start[];
+extern char _binary_gamepad_svg_end[];
+extern char _binary_gamepad_svg_start[];
+extern char _binary_keyboard_svg_end[];
+extern char _binary_keyboard_svg_start[];
+extern char _binary_mobile_retro_svg_end[];
+extern char _binary_mobile_retro_svg_start[];
+
 Menu::Menu(const std::vector<App> & apps):
-    apps_{apps}
+    apps_{apps},
+    mouse_icon_{renderer_, std::span{_binary_computer_mouse_svg_start, static_cast<std::size_t>(_binary_computer_mouse_svg_end - _binary_computer_mouse_svg_start)}, 32, 32, 0xFF, 0xFF, 0xFF},
+    keyboard_icon_{renderer_, std::span{_binary_keyboard_svg_start, static_cast<std::size_t>(_binary_keyboard_svg_end - _binary_keyboard_svg_start)}, 32, 32, 0xFF, 0xFF, 0xFF},
+    gamepad_icon_{renderer_, std::span{_binary_gamepad_svg_start, static_cast<std::size_t>(_binary_gamepad_svg_end - _binary_gamepad_svg_start)}, 32, 32, 0xFF, 0xFF, 0xFF},
+    cec_icon_{renderer_, std::span{_binary_mobile_retro_svg_start, static_cast<std::size_t>(_binary_mobile_retro_svg_end - _binary_mobile_retro_svg_start)}, 32, 32, 0xFF, 0xFF, 0xFF}
 {
     SDL_ShowCursor(SDL_DISABLE);
 
