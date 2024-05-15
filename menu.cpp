@@ -58,12 +58,23 @@ Menu::Menu(const std::vector<App> & apps):
         });
     }
 
-    // TODO: failing on 2nd run
-    if(SDL_RegisterEvents(1) != animation_event)
-        SDL::sdl_error("Could not register custom event");
+    // NOTE: According to the SDL API, you should call SDL_RegisterEvents before using a user-defined event,
+    //       However (at least as of SDL3), all that function does is increment an internal counter and return it.
+    //       See https://github.com/libsdl-org/SDL/blob/17965117824d82afd0f6692c8871510f942270f7/src/events/SDL_events.c#L1483
+    //       Annoyingly, this counter is never reset, and will continue to increase every time SDL_RegisterEvents,
+    //       even after SDL_Quit / SDL_Init
+    //       Since we're repeatedly (stupidly?) recreating our SDL instance, we can't keep calling this.
+    //       For starters, to use the returned value in a switch stmt it needs to be constant, and, eventually,
+    //       (though unlikely) we'd run out of values
+    //       With all of that in mind, we just won't call SDL_RegisterEvents, and use the fixed values of SDL_USEREVENT + n
+    //       This will work as long as SDL doesn't start doing anything else with the internal event value. If custom events
+    //       start failing for no apparent reason, try uncommenting the following:
 
-    if(SDL_RegisterEvents(1) != cec_event)
-        SDL::sdl_error("Could not register custom event");
+    // if(SDL_RegisterEvents(1) != animation_event)
+    //     SDL::sdl_error("Could not register custom event");
+
+    // if(SDL_RegisterEvents(1) != cec_event)
+    //     SDL::sdl_error("Could not register custom event");
 }
 
 int Menu::run()
