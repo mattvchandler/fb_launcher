@@ -24,13 +24,10 @@ namespace
         int row_spacing_px() { return row_spacing * screen_height / 100; }
         int col_spacing_px() { return col_spacing * screen_width / 100; }
         int image_size_px() { return row_height_px(); }
-        int text_wrap_px() { return  screen_width - (2 * horiz_margin_px() + 2 * image_size_px() + 2 * col_spacing_px()); }
+        int text_wrap_px() { return  screen_width - (2 * horiz_margin_px() + image_size_px() + col_spacing_px()); }
         int text_x_px() { return horiz_margin_px() + image_size_px() + col_spacing_px(); }
-        int input_icon_size_px() { return image_size_px() / 2; }
-        int left_input_icon_x_px()  { return screen_width - horiz_margin_px() - input_icon_size_px(); }
-        int right_input_icon_x_px() { return left_input_icon_x_px() + input_icon_size_px(); }
-        int upper_input_icon_y_px() { return 0; }
-        int lower_input_icon_y_px() { return input_icon_size_px(); }
+        int input_icon_size_px() { return image_size_px() / 4; }
+        int input_icon_margin_px() { return input_icon_size_px() / 8; }
     };
 
     constexpr auto text_color = SDL_Color {0xFF, 0xFF, 0xFF, 0xFF};
@@ -415,12 +412,28 @@ void Menu::draw_row(int pos)
     tex.desc.render(renderer_, layout.text_x_px(), row_top_px + tex.title.get_height());
 
     auto & app = apps_[row_index];
+
+    auto input_icon_x = layout.text_x_px();
+    auto input_icon_y = row_top_px + tex.title.get_height() + tex.desc.get_height();
+
     if(app.input_mouse)
-        mouse_icon_.render(renderer_, layout.left_input_icon_x_px(), row_top_px + layout.upper_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
+    {
+        mouse_icon_.render(renderer_, input_icon_x, input_icon_y, layout.input_icon_size_px(), layout.input_icon_size_px());
+        input_icon_x += layout.input_icon_size_px() + layout.input_icon_margin_px();
+    }
     if(app.input_keyboard)
-        keyboard_icon_.render(renderer_, layout.right_input_icon_x_px(), row_top_px + layout.upper_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
+    {
+        keyboard_icon_.render(renderer_, input_icon_x, input_icon_y, layout.input_icon_size_px(), layout.input_icon_size_px());
+        input_icon_x += layout.input_icon_size_px() + layout.input_icon_margin_px();
+    }
     if(app.input_gamepad)
-        gamepad_icon_.render(renderer_, layout.left_input_icon_x_px(), row_top_px + layout.lower_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
+    {
+        gamepad_icon_.render(renderer_, input_icon_x, input_icon_y, layout.input_icon_size_px(), layout.input_icon_size_px());
+        input_icon_x += layout.input_icon_size_px() + layout.input_icon_margin_px();
+    }
     if(app.input_cec)
-        cec_icon_.render(renderer_, layout.right_input_icon_x_px(), row_top_px + layout.lower_input_icon_y_px(), layout.input_icon_size_px(), layout.input_icon_size_px());
+    {
+        cec_icon_.render(renderer_, input_icon_x, input_icon_y, layout.input_icon_size_px(), layout.input_icon_size_px());
+        input_icon_x += layout.input_icon_size_px() + layout.input_icon_margin_px();
+    }
 }
