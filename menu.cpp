@@ -68,7 +68,7 @@ Menu::Menu(const std::vector<App> & apps):
     {
         // Note: text textures are generated in resize()
         app_textures_.emplace_back(Menu_textures{
-            .thumbnail = a.thumbnail_path.empty() ? SDL::Texture{} : SDL::Texture{renderer_, a.thumbnail_path}
+            .thumbnail = a.thumbnail_path.empty() ? SDL::Texture{} : SDL::Texture{renderer_, a.thumbnail_path, 32, 32}
         });
     }
 
