@@ -8,13 +8,14 @@
 
 void usage()
 {
-    std::cout<<"Usage: fb_launcher [-l] [-h] APP_LIST_CSV\n"
+    std::cout<<"Usage: fb_launcher [-l] [-e] [-h] APP_LIST_CSV\n"
                "Display a launcher for a set of apps (defined in APP_LIST_CSV)\n"
                "Can be run from the linux console without X or Wayland,\n"
                "and can be controlled with keyboard, gamepad, or at TV remote via CEC\n"
                "\n"
                "Arguments\n"
                "  -l             Launch first program in list without displaying launcher\n"
+               "  -e             Enable pressing escape to quit\n"
                "  -h             Display this message and exit\n"
                "  APP_LIST_CSV   A CSV file containing the list of apps to display\n"
                "                 See below for file format\n"
@@ -40,6 +41,7 @@ void usage()
 int main(int argc, char * argv[])
 {
     auto selection_index = -1;
+    bool allow_escape = false;
 
     for(int i = 0; i < argc; ++i)
     {
@@ -51,13 +53,17 @@ int main(int argc, char * argv[])
                     selection_index = 0;
                     break;
 
+                case 'e':
+                    allow_escape = true;
+                    break;
+
                 case 'h':
                     usage();
                     return 0;
 
                 default:
                     usage();
-                    std::cout<<"Unknown argument '" << argv[i][1] <<"'\n";
+                    std::cerr<<"Unknown argument '" << argv[i][1] <<"'\n";
                     return 1;
             }
 
@@ -89,7 +95,7 @@ int main(int argc, char * argv[])
             if(selection_index >= 0 && selection_index < static_cast<int>(std::size(apps)))
                 std::system(apps[selection_index].command.c_str());
 
-            auto menu = Menu{apps};
+            auto menu = Menu{apps, allow_escape};
 
             selection_index = menu.run();
 

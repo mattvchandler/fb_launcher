@@ -14,13 +14,14 @@
 class Menu
 {
 public:
-    Menu(const std::vector<App> & apps);
+    Menu(const std::vector<App> & apps, bool allow_escape);
     int run();
     int get_exited() const { return exited_; }
 
 private:
     const std::vector<App> & apps_;
 
+    bool allow_escape_ {false};
     bool running_ {false};
     bool exited_ {false};
     int index_ {0u};
