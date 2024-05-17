@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <functional>
+#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -110,6 +111,7 @@ int Menu::run()
             case SDL_QUIT:
                 running_ = false;
                 exited_ = true;
+                std::cout<<"Quitting ...\n";
                 break;
 
             case SDL_WINDOWEVENT:
@@ -125,12 +127,17 @@ int Menu::run()
             case SDL_JOYDEVICEADDED:
             {
                 auto joy = SDL::Joystick{ev.jdevice.which};
+                std::cout<<(joy.is_gc() ? "Gamepad" : "Joystick")<<" added: "<<joy.name()<<'\n';
                 joysticks.emplace(SDL_JoystickGetDeviceInstanceID(ev.jdevice.which), std::move(joy));
                 break;
             }
 
             case SDL_JOYDEVICEREMOVED:
-                joysticks.erase(ev.jdevice.which);
+                if(auto joy = joysticks.find(ev.jdevice.which); joy != std::end(joysticks))
+                {
+                    std::cout<<(joy->second.is_gc() ? "Gamepad" : "Joystick")<<" removed: "<<joy->second.name()<<'\n';
+                    joysticks.erase(joy);
+                }
                 break;
 
             case SDL_KEYDOWN:

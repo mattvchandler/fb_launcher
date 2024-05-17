@@ -93,11 +93,17 @@ int main(int argc, char * argv[])
         while(true)
         {
             if(selection_index >= 0 && selection_index < static_cast<int>(std::size(apps)))
+            {
+                std::cout<<"Launching "<<apps[selection_index].title<<" ("<<apps[selection_index].command<<")\n";
+                std::cout.flush();
                 std::system(apps[selection_index].command.c_str());
+            }
 
+            std::cout<<"Loading menu...\n";
             auto menu = Menu{apps, allow_escape};
 
             selection_index = menu.run();
+            std::cout<<"Exiting menu...\n";
 
             if(menu.get_exited())
                 break;
