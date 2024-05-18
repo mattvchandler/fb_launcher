@@ -116,8 +116,7 @@ namespace
     }
 
     std::tuple<std::vector<unsigned char>, int, int> read_svg(const std::span<char> & svg_data,
-            int viewport_width, int viewport_height,
-            int override_r, int override_g, int override_b)
+            int viewport_width, int viewport_height)
     {
         RAII_stack rs;
 
@@ -206,12 +205,6 @@ namespace
         }
     #endif
 
-        if(override_r >= 0 && override_g >= 0 && override_b >= 0)
-        {
-            cairo_set_source_rgba(cr, override_r / 255.0, override_g / 255.0, override_b / 255.0, 1.0);
-            cairo_mask_surface(cr, surface, 0.0, 0.0);
-        }
-
         std::vector<unsigned char> letterboxed_pixel_data((2 * y_offset + height) * (2 * x_offset + width) * 4, 0);
 
         if(cairo_image_surface_get_stride(surface) < pixel_width * 4)
@@ -225,8 +218,7 @@ namespace
     }
 
     std::tuple<std::vector<unsigned char>, int, int, bool> load_image_from_span(const std::span<char> & image_data,
-            int viewport_height, int viewport_width,
-            int override_r, int override_g, int override_b)
+            int viewport_height, int viewport_width)
     {
         const std::array<unsigned char, 8> png_header = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
         auto is_png = std::equal(std::begin(png_header), std::end(png_header), std::begin(image_data), [](unsigned char a, char b) { return a == static_cast<unsigned char>(b); });
@@ -240,7 +232,7 @@ namespace
         {
             try
             {
-                auto && [data, width, height] = read_svg(image_data, viewport_width, viewport_height, override_r, override_g, override_b);
+                auto && [data, width, height] = read_svg(image_data, viewport_width, viewport_height);
                 return {data, width, height, true};
             }
             catch(const not_svg_error & e)
@@ -272,28 +264,20 @@ namespace
 namespace SDL
 {
     Texture::Texture(Renderer & renderer, const std::string & img_path,
-            int viewport_width, int viewport_height,
-            int override_r, int override_g, int override_b):
-        stored_image_{img_path},
-        override_r_{override_r},
-        override_g_{override_g},
-        override_b_{override_b}
+            int viewport_width, int viewport_height):
+        stored_image_{img_path}
     {
         auto file_data = read_to_vector(img_path);
-        auto image_data = load_image_from_span(std::span{std::data(file_data), std::size(file_data)}, viewport_width, viewport_height, override_r_, override_b_, override_b_);
+        auto image_data = load_image_from_span(std::span{std::data(file_data), std::size(file_data)}, viewport_width, viewport_height);
         std::tie(std::ignore, width_, height_, rescalable_) = image_data;
         texture_ = load_texture_from_data(renderer, std::data(std::get<0>(image_data)), width_, height_);
     }
 
     Texture::Texture(Renderer & renderer, const std::span<char> & img_data,
-            int viewport_width, int viewport_height,
-            int override_r, int override_g, int override_b):
-        stored_image_{img_data},
-        override_r_{override_r},
-        override_g_{override_g},
-        override_b_{override_b}
+            int viewport_width, int viewport_height):
+        stored_image_{img_data}
     {
-        auto image_data = load_image_from_span(img_data, viewport_width, viewport_height, override_r_, override_b_, override_b_);
+        auto image_data = load_image_from_span(img_data, viewport_width, viewport_height);
         std::tie(std::ignore, width_, height_, rescalable_) = image_data;
         texture_ = load_texture_from_data(renderer, std::data(std::get<0>(image_data)), width_, height_);
     }
@@ -318,8 +302,8 @@ namespace SDL
             return;
 
         if(auto filename = std::get_if<std::string>(&stored_image_); filename)
-            *this = Texture{renderer, *filename, width, height, override_r_, override_g_, override_b_};
+            *this = Texture{renderer, *filename, width, height};
         else
-            *this = Texture{renderer, std::get<std::span<char>>(stored_image_), width, height, override_r_, override_g_, override_b_};
+            *this = Texture{renderer, std::get<std::span<char>>(stored_image_), width, height};
     }
 }

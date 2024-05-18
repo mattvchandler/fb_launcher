@@ -16,9 +16,6 @@ namespace SDL
         int height_ {0};
 
         std::variant<std::string, std::span<char>> stored_image_;
-        int override_r_ {-1};
-        int override_g_ {-1};
-        int override_b_ {-1};
         bool rescalable_ {false};
 
     public:
@@ -31,12 +28,10 @@ namespace SDL
                 sdl_error("Unable to create SDL texture");
         }
         Texture(Renderer & renderer, const std::string & img_path,
-                int viewport_width = 0, int viewport_height = 0,
-                int override_r = -1, int override_g = -1, int override_b = -1);
+                int viewport_width = 0, int viewport_height = 0);
 
         Texture(Renderer & renderer, const std::span<char> & img_data,
-                int viewport_width = 0, int viewport_height = 0,
-                int override_r = -1, int override_g = -1, int override_b = -1);
+                int viewport_width = 0, int viewport_height = 0);
 
         Texture(Renderer & renderer, Surface & surface):
             texture_{SDL_CreateTextureFromSurface(renderer, surface)},
@@ -59,9 +54,6 @@ namespace SDL
             width_{std::move(t.width_)},
             height_{std::move(t.height_)},
             stored_image_{std::move(t.stored_image_)},
-            override_r_{std::move(t.override_r_)},
-            override_g_{std::move(t.override_g_)},
-            override_b_{std::move(t.override_b_)},
             rescalable_{std::move(t.rescalable_)}
         {
             t.texture_ = nullptr;
@@ -75,9 +67,6 @@ namespace SDL
                 width_ = std::move(t.width_);
                 height_ = std::move(t.height_);
                 stored_image_ = std::move(t.stored_image_);
-                override_r_ = std::move(t.override_r_);
-                override_g_ = std::move(t.override_g_);
-                override_b_ = std::move(t.override_b_);
                 rescalable_ = std::move(t.rescalable_);
             }
             return *this;
