@@ -417,6 +417,7 @@ void Menu::draw_row(int pos)
     SDL_SetTextureColorMod(tex.thumbnail, fade, fade, fade);
     SDL_SetTextureColorMod(tex.title, fade, fade, fade);
     SDL_SetTextureColorMod(tex.desc, fade, fade, fade);
+    SDL_SetTextureColorMod(tex.note, fade, fade, fade);
     SDL_SetTextureColorMod(mouse_icon_, fade, fade, fade);
     SDL_SetTextureColorMod(keyboard_icon_, fade, fade, fade);
     SDL_SetTextureColorMod(gamepad_icon_, fade, fade, fade);
