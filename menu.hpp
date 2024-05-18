@@ -48,6 +48,7 @@ private:
     {
         SDL::Texture title;
         SDL::Texture desc;
+        SDL::Texture note;
         SDL::Texture thumbnail;
     };
     std::vector<Menu_textures> app_textures_;

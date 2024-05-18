@@ -353,6 +353,8 @@ void Menu::resize(int w, int h)
         {
             app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, layout.text_wrap_px());
             app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, layout.text_wrap_px());
+            if(!apps_[i].note.empty())
+                app_textures_[i].note = desc_font.render_text(renderer_, apps_[i].note, text_color, layout.text_wrap_px());
             app_textures_[i].thumbnail.rescale(renderer_, layout.image_size_px(), layout.image_size_px());
         }
 
@@ -421,10 +423,11 @@ void Menu::draw_row(int pos)
     tex.thumbnail.render(renderer_, layout.horiz_margin_px(), row_top_px, layout.image_size_px(), layout.image_size_px());
     tex.title.render(renderer_, layout.text_x_px(), row_top_px);
     tex.desc.render(renderer_, layout.text_x_px(), row_top_px + tex.title.get_height());
+    tex.note.render(renderer_, layout.text_x_px(), row_top_px + tex.title.get_height() + tex.desc.get_height());
 
     auto & app = apps_[row_index];
 
-    auto input_icon_x = layout.text_x_px();
+    auto input_icon_x = layout.text_x_px() + tex.note.get_width() + layout.input_icon_margin_px();
     auto input_icon_y = row_top_px + tex.title.get_height() + tex.desc.get_height();
 
     if(app.input_mouse)

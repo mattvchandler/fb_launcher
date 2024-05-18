@@ -14,6 +14,7 @@ struct App
     bool input_keyboard;
     bool input_mouse;
     bool input_gamepad;
+    std::string note;
 };
 
 std::vector <App> read_app_list(const std::string & app_list_path);

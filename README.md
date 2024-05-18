@@ -42,10 +42,13 @@ On Debian, these can all be installed with:
 * Keyboard input: 1 if keyboard input is supported by this program, else 0
 * Mouse input:    1 if mouse input is supported by this program, else 0
 * Gamepad input:  1 if gamepad input is supported by this program, else 0
+* Note:           Text displayed next to input icons. Can be used to specify
+                  number of players. May be left blank
 
 The file should not contain a header row
 
 #### Example file contents:
-    Firefox,Browse the World Wide Web,firefox,/usr/share/icons/hicolor/128x128/apps/firefox.png,0,1,1,0;
+    Firefox,Browse the World Wide Web,/usr/bin/firefox,/usr/share/icons/hicolor/128x128/apps/firefox.png,0,1,1,0,
+    Chess,Play the classic two-player board game of chess,/usr/games/gnome-chess,/usr/share/icons/hicolor/scalable/apps/org.gnome.Chess.svg,0,1,1,0,1-2 players
 
 Keyboard, Mouse, Game Controller, and Remote Control icons by [Font Awesome](https://fontawesome.com/license/free) (CC BY 4.0) Copyright 2024 Fonticons, Inc.

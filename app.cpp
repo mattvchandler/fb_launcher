@@ -11,7 +11,7 @@ std::vector<App> read_app_list(const std::string & app_list_path)
     for(auto && row: reader)
     {
         using std::string;
-        auto row_t = row.read_tuple<string, string, string, string, int, int, int, int>();
+        auto row_t = row.read_tuple<string, string, string, string, int, int, int, int, std::string>();
 
         apps.emplace_back(App
         {
@@ -22,7 +22,8 @@ std::vector<App> read_app_list(const std::string & app_list_path)
             .input_cec      = std::get<4>(row_t) == 0 ? false : true,
             .input_keyboard = std::get<5>(row_t) == 0 ? false : true,
             .input_mouse    = std::get<6>(row_t) == 0 ? false : true,
-            .input_gamepad  = std::get<7>(row_t) == 0 ? false : true
+            .input_gamepad  = std::get<7>(row_t) == 0 ? false : true,
+            .note           = std::get<8>(row_t)
         });
     }
 

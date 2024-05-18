@@ -31,11 +31,14 @@ void usage()
                "  Keyboard input: 1 if keyboard input is supported by this program, else 0\n"
                "  Mouse input:    1 if mouse input is supported by this program, else 0\n"
                "  Gamepad input:  1 if gamepad input is supported by this program, else 0\n"
+               "  Note:           Text displayed next to input icons. Can be used to specify\n"
+               "                  number of players. May be left blank\n"
                "\n"
                "The file should not contain a header row\n"
                "\n"
                "Example file contents:\n"
-               "Firefox,Browse the World Wide Web,firefox,/usr/share/icons/hicolor/128x128/apps/firefox.png,0,1,1,0\n";
+               "Firefox,Browse the World Wide Web,firefox,/usr/share/icons/hicolor/128x128/apps/firefox.png,0,1,1,0,\n"
+               "Chess,Play the classic two-player board game of chess,/usr/games/gnome-chess,/usr/share/icons/hicolor/scalable/apps/org.gnome.Chess.svg,0,1,1,0,1-2 players\n";
 }
 
 int main(int argc, char * argv[])
