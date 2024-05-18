@@ -72,6 +72,7 @@ namespace SDL
             return *this;
         }
 
+        operator bool const() { return texture_; }
         operator const SDL_Texture*() const { return texture_; }
         operator SDL_Texture*() { return texture_; }
 

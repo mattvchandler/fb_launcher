@@ -57,19 +57,12 @@ Menu::Menu(const std::vector<App> & apps, bool allow_escape):
     mouse_icon_{renderer_, std::span{_binary_computer_mouse_svg_start, static_cast<std::size_t>(_binary_computer_mouse_svg_end - _binary_computer_mouse_svg_start)}, 32, 32},
     keyboard_icon_{renderer_, std::span{_binary_keyboard_svg_start, static_cast<std::size_t>(_binary_keyboard_svg_end - _binary_keyboard_svg_start)}, 32, 32},
     gamepad_icon_{renderer_, std::span{_binary_gamepad_svg_start, static_cast<std::size_t>(_binary_gamepad_svg_end - _binary_gamepad_svg_start)}, 32, 32},
-    cec_icon_{renderer_, std::span{_binary_mobile_retro_svg_start, static_cast<std::size_t>(_binary_mobile_retro_svg_end - _binary_mobile_retro_svg_start)}, 32, 32}
+    cec_icon_{renderer_, std::span{_binary_mobile_retro_svg_start, static_cast<std::size_t>(_binary_mobile_retro_svg_end - _binary_mobile_retro_svg_start)}, 32, 32},
+    app_textures_(std::size(apps_))
 {
     SDL_ShowCursor(SDL_DISABLE);
 
     cec_.register_callback(std::bind(&Menu::queue_cec_event, this, std::placeholders::_1));
-
-    for(auto && a: apps_)
-    {
-        // Note: text textures are generated in resize()
-        app_textures_.emplace_back(Menu_textures{
-            .thumbnail = a.thumbnail_path.empty() ? SDL::Texture{} : SDL::Texture{renderer_, a.thumbnail_path, 32, 32}
-        });
-    }
 
     // NOTE: According to the SDL API, you should call SDL_RegisterEvents before using a user-defined event,
     //       However (at least as of SDL3), all that function does is increment an internal counter and return it.
@@ -351,11 +344,20 @@ void Menu::resize(int w, int h)
         auto layout = Layout{w_, h_};
         for(auto i = 0u; i < std::size(apps_); ++i)
         {
-            app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, layout.text_wrap_px());
-            app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, layout.text_wrap_px());
+            if(!apps_[i].thumbnail_path.empty())
+            {
+                if(app_textures_[i].thumbnail)
+                    app_textures_[i].thumbnail.rescale(renderer_, layout.image_size_px(), layout.image_size_px());
+                else
+                    app_textures_[i].thumbnail = SDL::Texture{renderer_, apps_[i].thumbnail_path, layout.image_size_px(), layout.image_size_px()};
+            }
+
+            if(!apps_[i].title.empty())
+                app_textures_[i].title = title_font.render_text(renderer_, apps_[i].title, text_color, layout.text_wrap_px());
+            if(!apps_[i].desc.empty())
+                app_textures_[i].desc = desc_font.render_text(renderer_, apps_[i].desc, text_color, layout.text_wrap_px());
             if(!apps_[i].note.empty())
                 app_textures_[i].note = desc_font.render_text(renderer_, apps_[i].note, text_color, layout.text_wrap_px());
-            app_textures_[i].thumbnail.rescale(renderer_, layout.image_size_px(), layout.image_size_px());
         }
 
         mouse_icon_.rescale(renderer_, layout.input_icon_size_px(), layout.input_icon_size_px());
