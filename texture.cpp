@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <cstring>
+#include <cerrno>
 
 #include <png.h>
 #include <librsvg/rsvg.h>
@@ -40,11 +41,13 @@ namespace
         std::array<char, 4096> buffer;
 
         auto input = std::ifstream{path, std::ios::binary};
+        if(!input)
+            throw std::runtime_error {"Error opening input file: " + path + " - " + strerror(errno)};
         while(input)
         {
             input.read(std::data(buffer), std::size(buffer));
             if(input.bad())
-                throw std::runtime_error {"Error reading input file: " + path};
+                throw std::runtime_error {"Error reading input file: " + path + " - " + strerror(errno)};
 
             data.insert(std::end(data), std::begin(buffer), std::begin(buffer) + input.gcount());
         }
