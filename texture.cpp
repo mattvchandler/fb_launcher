@@ -258,7 +258,10 @@ namespace
         }
 
         SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureScaleMode(texture, SDL_ScaleModeBest);
+        if(width < 48 || height < 48)
+            SDL_SetTextureScaleMode(texture, SDL_ScaleModeNearest);
+        else
+            SDL_SetTextureScaleMode(texture, SDL_ScaleModeBest);
 
         return texture;
     }
