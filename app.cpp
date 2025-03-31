@@ -1,7 +1,10 @@
 #include "app.hpp"
 
-#include <csvpp/csv.hpp>
 #include <stdexcept>
+
+#include <unistd.h>
+
+#include <csvpp/csv.hpp>
 
 std::vector<App> read_app_list(const std::string & app_list_path)
 {
@@ -16,12 +19,17 @@ std::vector<App> read_app_list(const std::string & app_list_path)
         if(std::get<9>(row_t) == 0) // disabled?
             continue;
 
+        auto thumbnail_path = std::get<3>(row_t);
+
+        if(access(thumbnail_path.c_str(), F_OK) != 0 || access(thumbnail_path.c_str(), R_OK) != 0)
+            thumbnail_path.clear();
+
         apps.emplace_back(App
         {
             .title          = std::get<0>(row_t),
             .desc           = std::get<1>(row_t),
             .command        = std::get<2>(row_t).empty() ? std::string{"/dev/false"} : std::get<2>(row_t),
-            .thumbnail_path = std::get<3>(row_t),
+            .thumbnail_path = std::move(thumbnail_path),
             .input_cec      = std::get<4>(row_t) == 0 ? false : true,
             .input_keyboard = std::get<5>(row_t) == 0 ? false : true,
             .input_mouse    = std::get<6>(row_t) == 0 ? false : true,
