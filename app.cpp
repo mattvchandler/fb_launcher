@@ -11,7 +11,10 @@ std::vector<App> read_app_list(const std::string & app_list_path)
     for(auto && row: reader)
     {
         using std::string;
-        auto row_t = row.read_tuple<string, string, string, string, int, int, int, int, std::string>();
+        auto row_t = row.read_tuple<string, string, string, string, int, int, int, int, std::string, int>();
+
+        if(std::get<9>(row_t) == 0) // disabled?
+            continue;
 
         apps.emplace_back(App
         {

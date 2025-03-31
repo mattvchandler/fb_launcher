@@ -33,6 +33,7 @@ void usage()
                "  Gamepad input:  1 if gamepad input is supported by this program, else 0\n"
                "  Note:           Text displayed next to input icons. Can be used to specify\n"
                "                  number of players. May be left blank\n"
+               "  Enabled:        1 to display this app in the menu, 0 to hide it\n"
                "\n"
                "The file should not contain a header row\n"
                "\n"
