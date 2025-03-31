@@ -51,9 +51,10 @@ extern char _binary_keyboard_svg_start[];
 extern char _binary_mobile_retro_svg_end[];
 extern char _binary_mobile_retro_svg_start[];
 
-Menu::Menu(const std::vector<App> & apps, bool allow_escape):
+Menu::Menu(const std::vector<App> & apps, bool allow_escape, int start_index):
     apps_{apps},
     allow_escape_{allow_escape},
+    index_{start_index >= 0 ? start_index : 0},
     mouse_icon_{renderer_, std::span{_binary_computer_mouse_svg_start, static_cast<std::size_t>(_binary_computer_mouse_svg_end - _binary_computer_mouse_svg_start)}, 32, 32},
     keyboard_icon_{renderer_, std::span{_binary_keyboard_svg_start, static_cast<std::size_t>(_binary_keyboard_svg_end - _binary_keyboard_svg_start)}, 32, 32},
     gamepad_icon_{renderer_, std::span{_binary_gamepad_svg_start, static_cast<std::size_t>(_binary_gamepad_svg_end - _binary_gamepad_svg_start)}, 32, 32},

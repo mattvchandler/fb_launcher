@@ -104,7 +104,7 @@ int main(int argc, char * argv[])
             }
 
             std::cout<<"Loading menu...\n";
-            auto menu = Menu{apps, allow_escape};
+            auto menu = Menu{apps, allow_escape, selection_index};
 
             selection_index = menu.run();
             std::cout<<"Exiting menu...\n";
