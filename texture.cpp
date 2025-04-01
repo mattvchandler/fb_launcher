@@ -214,8 +214,18 @@ namespace
             throw std::runtime_error {"Invalid SVG stride"};
 
         auto * surface_data = cairo_image_surface_get_data(surface);
+        const auto surface_stride = cairo_image_surface_get_stride(surface);
         for(int row = 0; row < pixel_height; ++row)
-            std::memcpy(std::data(letterboxed_pixel_data) + row * pixel_width * 4, surface_data + cairo_image_surface_get_stride(surface) * row, pixel_width * 4);
+        {
+            for(int col = 0; col < pixel_width; ++col)
+            {
+                // convert BGRA to RGBA
+                letterboxed_pixel_data[(row * pixel_width + col) * 4 + 0] = surface_data[(surface_stride * row) + col * 4 + 2];
+                letterboxed_pixel_data[(row * pixel_width + col) * 4 + 1] = surface_data[(surface_stride * row) + col * 4 + 1];
+                letterboxed_pixel_data[(row * pixel_width + col) * 4 + 2] = surface_data[(surface_stride * row) + col * 4 + 0];
+                letterboxed_pixel_data[(row * pixel_width + col) * 4 + 3] = surface_data[(surface_stride * row) + col * 4 + 3];
+            }
+        }
 
         return {letterboxed_pixel_data, pixel_width, pixel_height};
     }
