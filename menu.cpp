@@ -51,9 +51,10 @@ extern char _binary_keyboard_svg_start[];
 extern char _binary_mobile_retro_svg_end[];
 extern char _binary_mobile_retro_svg_start[];
 
-Menu::Menu(const std::vector<App> & apps, bool allow_escape, int start_index):
+Menu::Menu(const std::vector<App> & apps, bool allow_escape, int start_index, const std::string & ctrl_alt_del_cmd):
     apps_{apps},
     allow_escape_{allow_escape},
+    ctrl_alt_del_cmd_{ctrl_alt_del_cmd},
     index_{start_index >= 0 ? start_index : 0},
     mouse_icon_{renderer_, std::span{_binary_computer_mouse_svg_start, static_cast<std::size_t>(_binary_computer_mouse_svg_end - _binary_computer_mouse_svg_start)}, 32, 32},
     keyboard_icon_{renderer_, std::span{_binary_keyboard_svg_start, static_cast<std::size_t>(_binary_keyboard_svg_end - _binary_keyboard_svg_start)}, 32, 32},
@@ -158,6 +159,11 @@ int Menu::run()
                     case SDLK_RIGHT:
                     case SDLK_DOWN:
                         next();
+                        break;
+
+                    case SDLK_DELETE:
+                        if(!ctrl_alt_del_cmd_.empty() && (ev.key.keysym.mod & KMOD_CTRL & KMOD_ALT))
+                            std::system(ctrl_alt_del_cmd_.c_str());
                         break;
 
                     default:

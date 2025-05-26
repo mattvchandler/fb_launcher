@@ -8,7 +8,7 @@
 
 void usage()
 {
-    std::cout<<"Usage: fb_launcher [-l] [-e] [-h] APP_LIST_CSV\n"
+    std::cout<<"Usage: fb_launcher [-l] [-e] [-c COMMAND] [-h] APP_LIST_CSV\n"
                "Display a launcher for a set of apps (defined in APP_LIST_CSV)\n"
                "Can be run from the linux console without X or Wayland,\n"
                "and can be controlled with keyboard, gamepad, or at TV remote via CEC\n"
@@ -16,6 +16,7 @@ void usage()
                "Arguments\n"
                "  -l             Launch first program in list without displaying launcher\n"
                "  -e             Enable pressing escape to quit\n"
+               "  -c             Set a command to be executed on pressing Ctrl+Alt+Del\n"
                "  -h             Display this message and exit\n"
                "  APP_LIST_CSV   A CSV file containing the list of apps to display\n"
                "                 See below for file format\n"
@@ -45,16 +46,30 @@ void usage()
 int main(int argc, char * argv[])
 {
     auto selection_index = -1;
-    bool allow_escape = false;
+    auto allow_escape = false;
+    auto ctrl_alt_del_cmd = std::string{};
 
-    for(int i = 0; i < argc; ++i)
+    for(int i = 1; i < argc;)
     {
         if(argv[i][0] == '-')
         {
+            auto nargs = 1;
             switch(argv[i][1])
             {
                 case 'l':
                     selection_index = 0;
+                    break;
+
+                case 'c':
+                    if(i + 1 >= argc)
+                    {
+                        usage();
+                        std::cerr<<"\n-c requires argument\n";
+                        return 1;
+                    }
+
+                    nargs = 2;
+                    ctrl_alt_del_cmd = argv[i + 1];
                     break;
 
                 case 'e':
@@ -67,14 +82,16 @@ int main(int argc, char * argv[])
 
                 default:
                     usage();
-                    std::cerr<<"Unknown argument '" << argv[i][1] <<"'\n";
+                    std::cerr<<"\nUnknown argument '" << argv[i][1] <<"'\n";
                     return 1;
             }
 
-            argc -= 1;
             for(int j = i; j < argc; ++j)
-                argv[j] = argv[j + 1];
+                argv[j] = argv[j + nargs];
+            argc -= nargs;
         }
+        else
+            ++i;
     }
 
     if(argc < 2)
@@ -104,7 +121,7 @@ int main(int argc, char * argv[])
             }
 
             std::cout<<"Loading menu...\n";
-            auto menu = Menu{apps, allow_escape, selection_index};
+            auto menu = Menu{apps, allow_escape, selection_index, ctrl_alt_del_cmd};
 
             selection_index = menu.run();
             std::cout<<"Exiting menu...\n";

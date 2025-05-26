@@ -14,7 +14,7 @@
 class Menu
 {
 public:
-    Menu(const std::vector<App> & apps, bool allow_escape, int start_index = -1);
+    Menu(const std::vector<App> & apps, bool allow_escape, int start_index = -1, const std::string & ctrl_alt_del_cmd = std::string{});
     int run();
     int get_exited() const { return exited_; }
 
@@ -22,6 +22,7 @@ private:
     const std::vector<App> & apps_;
 
     bool allow_escape_ {false};
+    std::string ctrl_alt_del_cmd_{};
     bool running_ {false};
     bool exited_ {false};
     int index_ {0};
