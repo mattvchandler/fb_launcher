@@ -38,8 +38,8 @@ void usage()
                "The file should not contain a header row\n"
                "\n"
                "Example file contents:\n"
-               "Firefox,Browse the World Wide Web,firefox,/usr/share/icons/hicolor/128x128/apps/firefox.png,0,1,1,0,\n"
-               "Chess,Play the classic two-player board game of chess,/usr/games/gnome-chess,/usr/share/icons/hicolor/scalable/apps/org.gnome.Chess.svg,0,1,1,0,1-2 players\n";
+               "Firefox,Browse the World Wide Web,firefox,/usr/share/icons/hicolor/128x128/apps/firefox.png,0,1,1,0,,1\n"
+               "Chess,Play the classic two-player board game of chess,/usr/games/gnome-chess,/usr/share/icons/hicolor/scalable/apps/org.gnome.Chess.svg,0,1,1,0,1-2 players,1\n";
 }
 
 int main(int argc, char * argv[])
