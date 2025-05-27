@@ -16,7 +16,7 @@ void usage()
                "Arguments\n"
                "  -l             Launch first program in list without displaying launcher\n"
                "  -e             Enable pressing escape to quit\n"
-               "  -c             Set a command to be executed on pressing Ctrl+Alt+Del\n"
+               "  -c             Set a command to be executed on pressing Ctrl+Shift+Esc\n"
                "  -h             Display this message and exit\n"
                "  APP_LIST_CSV   A CSV file containing the list of apps to display\n"
                "                 See below for file format\n"

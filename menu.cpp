@@ -144,7 +144,11 @@ int Menu::run()
                         break;
 
                     case SDLK_ESCAPE:
-                        if(allow_escape_)
+                        if(!ctrl_alt_del_cmd_.empty() && (ev.key.keysym.mod & (KMOD_SHIFT | KMOD_CTRL)))
+                        {
+                            std::system(ctrl_alt_del_cmd_.c_str());
+                        }
+                        else if(allow_escape_)
                         {
                             running_ = false;
                             exited_ = true;
@@ -159,11 +163,6 @@ int Menu::run()
                     case SDLK_RIGHT:
                     case SDLK_DOWN:
                         next();
-                        break;
-
-                    case SDLK_DELETE:
-                        if(!ctrl_alt_del_cmd_.empty() && (ev.key.keysym.mod & KMOD_CTRL & KMOD_ALT))
-                            std::system(ctrl_alt_del_cmd_.c_str());
                         break;
 
                     default:
@@ -276,7 +275,6 @@ int Menu::run()
                         break;
                 }
                 break;
-
 
             default:
                 break;
